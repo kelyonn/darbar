@@ -7,11 +7,12 @@ const Home: React.FC = () => {
       {/* Hero Section */}
       <section className="hero-section">
         {/* Background Image */}
-        <img
-          src="/homepage.jpg" // Make sure this path is correct
-          alt="Luxury Indian Fashion"
-          className="hero-bg"
-        />
+<img
+  src="/homepage.jpg" // This works because it's in the 'public' folder
+  alt="Luxury Indian Fashion"
+  className="hero-bg"
+/>
+
         {/* Overlay for Blur & Dark Effect */}
         <div className="hero-overlay"></div>
 
