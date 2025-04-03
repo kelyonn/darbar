@@ -1,0 +1,120 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import './styles/animations.css';
+
+@layer base {
+  body {
+    @apply bg-royal-ivory text-gray-900 font-montserrat;
+    background-image: url('https://www.transparenttextures.com/patterns/arabesque.png');
+    background-repeat: repeat;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-playfair;
+  }
+}
+
+@layer components {
+  .mughal-container {
+    @apply relative border-4 border-royal-gold/20 rounded-mughal p-8 bg-white/90;
+    background-image: url('https://www.transparenttextures.com/patterns/flower-trail.png');
+  }
+
+  .mughal-card {
+    @apply relative overflow-hidden rounded-mughal bg-white shadow-elegant 
+           transition-all duration-300 hover:-translate-y-2;
+    background-image: url('https://www.transparenttextures.com/patterns/paisley.png');
+  }
+
+  .mughal-border {
+    @apply relative;
+  }
+
+  .mughal-border::before,
+  .mughal-border::after {
+    content: '';
+    @apply absolute w-16 h-16 border-2 border-royal-gold opacity-50;
+  }
+
+  .mughal-border::before {
+    @apply top-0 left-0 border-r-0 border-b-0;
+  }
+
+  .mughal-border::after {
+    @apply bottom-0 right-0 border-l-0 border-t-0;
+  }
+
+  .mughal-button {
+    @apply relative overflow-hidden bg-royal-gold text-white px-8 py-3 
+           rounded-mughal transition-all duration-300;
+    background-image: url('https://www.transparenttextures.com/patterns/diamond-upholstery.png');
+  }
+
+  .mughal-button:hover {
+    @apply bg-royal-gold/90 transform -translate-y-1;
+  }
+
+  .mughal-input {
+    @apply mt-1 block w-full rounded-mughal border-royal-gold/30 
+           shadow-sm focus:border-royal-gold focus:ring focus:ring-royal-gold/20;
+  }
+
+  .mughal-heading {
+    @apply relative font-playfair text-3xl md:text-4xl text-center mb-12;
+  }
+
+  .mughal-heading::before,
+  .mughal-heading::after {
+    content: '❖';
+    @apply absolute top-1/2 transform -translate-y-1/2 text-royal-gold/50 text-2xl;
+  }
+
+  .mughal-heading::before {
+    @apply -left-8;
+  }
+
+  .mughal-heading::after {
+    @apply -right-8;
+  }
+
+  .mughal-arch {
+    @apply relative rounded-arch bg-royal-gold/10 p-8;
+    background-image: url('https://www.transparenttextures.com/patterns/arabesque.png');
+  }
+
+  .product-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8;
+  }
+
+  .hero-section {
+    @apply relative h-screen flex items-center justify-center;
+  }
+  
+  .hero-bg {
+    @apply absolute inset-0 w-full h-full object-cover;
+  }
+  
+  .hero-overlay {
+    @apply absolute inset-0 bg-black/30 backdrop-blur-sm;
+  }
+  
+  .hero-content {
+    @apply relative text-center text-white px-4;
+  }
+  
+  .hero-title {
+    @apply font-playfair text-5xl md:text-7xl mb-6 drop-shadow-lg;
+  }
+  
+  .hero-subtitle {
+    @apply font-montserrat text-xl md:text-2xl mb-8;
+  }
+  
+  .hero-button {
+    @apply inline-block bg-royal-gold text-white font-montserrat px-8 py-3 rounded 
+           hover:bg-opacity-90 transition-colors;
+  }
+  
+}
