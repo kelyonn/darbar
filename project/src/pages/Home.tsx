@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import homepageImage from "../assets/homepage.jpg"; // Import the image
 
 const Home: React.FC = () => {
   return (
@@ -7,12 +8,11 @@ const Home: React.FC = () => {
       {/* Hero Section */}
       <section className="hero-section">
         {/* Background Image */}
-<img
-  src="/homepage.jpg" // This works because it's in the 'public' folder
-  alt="Luxury Indian Fashion"
-  className="hero-bg"
-/>
-
+        <img
+          src={homepageImage}  // Use the imported image
+          alt="Luxury Indian Fashion"
+          className="hero-bg"
+        />
         {/* Overlay for Blur & Dark Effect */}
         <div className="hero-overlay"></div>
 
