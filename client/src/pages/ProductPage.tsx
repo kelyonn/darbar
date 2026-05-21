@@ -1,89 +1,135 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Heart } from 'lucide-react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { Heart, ChevronRight } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { products } from '../data/products';
 
 const ProductPage = () => {
   const { id } = useParams();
-  console.log('ID from URL:', id); // Debugging
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const [selectedImage, setSelectedImage] = useState(0);
+  const [selectedSize, setSelectedSize] = useState('');
+  const [selectedColor, setSelectedColor] = useState('');
+  const [added, setAdded] = useState(false);
 
   const product = products.find(p => String(p.id) === id);
-  console.log('Product found:', product); // Debugging
 
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, []);
+  }, [id]);
 
   if (!product) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <p>Product not found</p>
+      <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8 text-center">
+        <h1 className="font-playfair text-3xl mb-4">Product Not Found</h1>
+        <p className="text-gray-600 mb-8">The product you are looking for does not exist or has been removed.</p>
+        <Link
+          to="/collections"
+          className="inline-block bg-royal-gold text-white px-8 py-3 rounded hover:bg-opacity-90 font-montserrat"
+        >
+          Back to Collections
+        </Link>
       </div>
     );
   }
 
-  const navigate = useNavigate();
-  const { addToCart } = useCart();
-  const { addToWishlist, isInWishlist } = useWishlist();
-  const [selectedImage, setSelectedImage] = useState(0);
-  const [selectedSize, setSelectedSize] = useState('');
-  const [selectedColor, setSelectedColor] = useState('');
+  const handleAddToCart = () => {
+    addToCart(product);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 2000);
+  };
+
+  const handleWishlist = () => {
+    if (isInWishlist(product.id)) {
+      removeFromWishlist(product.id);
+    } else {
+      addToWishlist(product);
+    }
+  };
+
+  const categoryLabel =
+    product.category === 'mens'
+      ? "Men's Collection"
+      : product.category === 'womens'
+      ? "Women's Collection"
+      : 'Accessories';
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-2 text-sm font-montserrat text-gray-500 mb-8">
+        <Link to="/" className="hover:text-royal-gold">Home</Link>
+        <ChevronRight size={14} />
+        <Link
+          to={`/${product.category}`}
+          className="hover:text-royal-gold"
+        >
+          {categoryLabel}
+        </Link>
+        <ChevronRight size={14} />
+        <span className="text-gray-800">{product.name}</span>
+      </nav>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
         {/* Product Images */}
         <div className="space-y-4">
-          <div className="aspect-w-3 aspect-h-4">
-            {product?.images?.length > 0 ? (
-              <img
-                src={product.images[selectedImage] || product.images[0]} // Use selected image or fallback
-                alt={product.name || "Product Image"}
-                className="w-full h-auto max-h-[700px] object-contain rounded-lg"
-                onError={(e) => (e.currentTarget.src = "/fallback.jpg")} // Fallback if image fails to load
-              />
-            ) : (
-              <p className="text-gray-500">No Image Available</p>
-            )}
+          <div className="overflow-hidden rounded-lg bg-gray-50">
+            <img
+              src={product.images[selectedImage] || product.images[0]}
+              alt={product.name}
+              className="w-full h-auto max-h-[700px] object-contain"
+            />
           </div>
-          <div className="flex space-x-4">
-            {product?.images?.map((image, index) => (
-              <button
-                key={index}
-                onClick={() => setSelectedImage(index)}
-                className={`w-20 h-20 rounded-lg overflow-hidden ${
-                  selectedImage === index ? 'ring-2 ring-royal-gold' : ''
-                }`}
-              >
-                <img
-                  src={image}
-                  alt={`${product.name} view ${index + 1}`}
-                  className="w-full h-full object-cover"
-                  onError={(e) => (e.currentTarget.src = "/fallback-thumbnail.jpg")}
-                />
-              </button>
-            ))}
-          </div>
+          {product.images.length > 1 && (
+            <div className="flex gap-3">
+              {product.images.map((image, index) => (
+                <button
+                  key={index}
+                  onClick={() => setSelectedImage(index)}
+                  className={`w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors ${
+                    selectedImage === index
+                      ? 'border-royal-gold'
+                      : 'border-transparent'
+                  }`}
+                >
+                  <img
+                    src={image}
+                    alt={`${product.name} view ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Product Details */}
         <div className="space-y-6">
-          <h1 className="font-playfair text-3xl">{product.name}</h1>
-          <p className="text-2xl font-semibold">₹{product.price.toLocaleString()}</p>
-          
+          <div>
+            <h1 className="font-playfair text-3xl mb-2">{product.name}</h1>
+            <p className="text-2xl font-semibold text-royal-gold">
+              ₹{product.price.toLocaleString('en-IN')}
+            </p>
+          </div>
+
           {/* Colors */}
-          {product.colors && (
+          {product.colors && product.colors.length > 0 && (
             <div>
-              <h3 className="font-montserrat text-lg mb-2">Color</h3>
-              <div className="flex space-x-2">
+              <h3 className="font-montserrat text-sm font-medium text-gray-700 mb-2 uppercase tracking-wide">
+                Colour
+              </h3>
+              <div className="flex flex-wrap gap-2">
                 {product.colors.map(color => (
                   <button
                     key={color}
                     onClick={() => setSelectedColor(color)}
-                    className={`px-4 py-2 border rounded ${
-                      selectedColor === color ? 'border-royal-gold bg-royal-gold/10' : ''
+                    className={`px-4 py-2 border rounded text-sm font-montserrat transition-colors ${
+                      selectedColor === color
+                        ? 'border-royal-gold bg-royal-gold/10 text-royal-gold'
+                        : 'border-gray-300 hover:border-royal-gold'
                     }`}
                   >
                     {color}
@@ -94,16 +140,20 @@ const ProductPage = () => {
           )}
 
           {/* Sizes */}
-          {product.sizes && (
+          {product.sizes && product.sizes.length > 0 && (
             <div>
-              <h3 className="font-montserrat text-lg mb-2">Size</h3>
-              <div className="flex space-x-2">
+              <h3 className="font-montserrat text-sm font-medium text-gray-700 mb-2 uppercase tracking-wide">
+                Size
+              </h3>
+              <div className="flex flex-wrap gap-2">
                 {product.sizes.map(size => (
                   <button
                     key={size}
                     onClick={() => setSelectedSize(size)}
-                    className={`px-4 py-2 border rounded ${
-                      selectedSize === size ? 'border-royal-gold bg-royal-gold/10' : ''
+                    className={`px-4 py-2 border rounded text-sm font-montserrat transition-colors ${
+                      selectedSize === size
+                        ? 'border-royal-gold bg-royal-gold/10 text-royal-gold'
+                        : 'border-gray-300 hover:border-royal-gold'
                     }`}
                   >
                     {size}
@@ -113,43 +163,61 @@ const ProductPage = () => {
             </div>
           )}
 
-          {/* Add to Cart & Wishlist */}
-          <div className="flex space-x-4">
+          {/* Actions */}
+          <div className="flex gap-4">
             <button
-              onClick={() => addToCart(product)}
-              className="flex-1 bg-royal-gold text-white px-6 py-3 rounded hover:bg-opacity-90"
-            >
-              Add to Cart
-            </button>
-            <button
-              onClick={() => addToWishlist(product)}
-              className={`p-3 border rounded ${
-                isInWishlist(product.id) ? 'text-royal-red' : 'text-gray-600'
+              onClick={handleAddToCart}
+              className={`flex-1 px-6 py-3 rounded font-montserrat text-sm font-medium transition-all ${
+                added
+                  ? 'bg-royal-green text-white'
+                  : 'bg-royal-gold text-white hover:bg-opacity-90'
               }`}
             >
-              <Heart />
+              {added ? 'Added to Cart' : 'Add to Cart'}
+            </button>
+            <button
+              onClick={handleWishlist}
+              className={`p-3 border rounded transition-colors ${
+                isInWishlist(product.id)
+                  ? 'border-royal-red text-royal-red'
+                  : 'border-gray-300 text-gray-600 hover:border-royal-red hover:text-royal-red'
+              }`}
+              aria-label={isInWishlist(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
+            >
+              <Heart
+                size={20}
+                fill={isInWishlist(product.id) ? 'currentColor' : 'none'}
+              />
             </button>
           </div>
 
           {/* Description */}
-          <div>
-            <h3 className="font-montserrat text-lg mb-2">Description</h3>
-            <p className="text-gray-600">{product.description}</p>
+          <div className="border-t pt-6">
+            <h3 className="font-montserrat text-sm font-medium text-gray-700 mb-2 uppercase tracking-wide">
+              Description
+            </h3>
+            <p className="text-gray-600 font-montserrat text-sm leading-relaxed">
+              {product.description}
+            </p>
           </div>
 
           {/* Fabric */}
-          {product.fabric && (
+          {product.fabric && product.fabric !== 'n/a' && (
             <div>
-              <h3 className="font-montserrat text-lg mb-2">Fabric</h3>
-              <p className="text-gray-600">{product.fabric}</p>
+              <h3 className="font-montserrat text-sm font-medium text-gray-700 mb-2 uppercase tracking-wide">
+                Fabric
+              </h3>
+              <p className="text-gray-600 font-montserrat text-sm">{product.fabric}</p>
             </div>
           )}
 
           {/* Artisan Story */}
           {product.artisanStory && (
-            <div>
-              <h3 className="font-montserrat text-lg mb-2">Artisan Story</h3>
-              <p className="text-gray-600">{product.artisanStory}</p>
+            <div className="bg-royal-cream border border-royal-gold/20 rounded-lg p-4">
+              <h3 className="font-playfair text-lg mb-2">Artisan Story</h3>
+              <p className="text-gray-600 font-montserrat text-sm leading-relaxed">
+                {product.artisanStory}
+              </p>
             </div>
           )}
         </div>
