@@ -3,12 +3,25 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  base: "./", // Ensure correct relative paths for deployment
+  server: {
+    port: 5173,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+      '/socket.io': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+        ws: true,
+      },
+    },
+  },
   optimizeDeps: {
-    exclude: ["lucide-react"],
+    exclude: ['lucide-react'],
   },
   build: {
-    outDir: "dist", // Explicitly define output directory
+    outDir: 'dist',
     emptyOutDir: true,
   },
 });
