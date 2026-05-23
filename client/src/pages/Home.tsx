@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Star } from 'lucide-react';
-import { products } from '../data/products';
-
-const featuredProducts = products.slice(0, 4);
-const trendingProducts = products.slice(4, 8);
+import { ArrowRight } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
+import api from '../services/api';
+import { useToast } from '../context/ToastContext';
+import { Product } from '../types';
+import { ProductGridSkeleton } from '../components/Skeletons';
+import { getFirstImage } from '../utils/images';
 
 const categories = [
   { label: "Men's Collection", slug: 'mens', description: 'Sherwanis, Bandhgalas & Kurta Sets', image: '/nawabiyat.jpg' },
@@ -18,17 +20,79 @@ const brandPillars = [
   { title: 'Heritage Technique', body: 'From hand-block printing to zardozi embroidery — every technique is rooted in Mughal court tradition.' },
 ];
 
+const NewsletterSection: React.FC = () => {
+  const { toast } = useToast();
+  const [email, setEmail] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await api.post('/newsletter', { email });
+      setSubscribed(true);
+    } catch (err: any) {
+      toast(err.response?.data?.message || 'Something went wrong', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <section className="bg-royal-green py-16 text-center">
+      <div className="max-w-xl mx-auto px-4">
+        <p className="font-montserrat text-royal-gold text-xs tracking-[4px] uppercase mb-3">Stay in the loop</p>
+        <h2 className="font-playfair text-3xl text-white mb-3">The Royal Dispatch</h2>
+        <p className="font-montserrat text-white/70 text-sm mb-8">New collections, artisan stories, and exclusive previews — straight to your inbox.</p>
+        {subscribed ? (
+          <p className="font-montserrat text-white font-medium">✓ You're on the list. Shukriya!</p>
+        ) : (
+          <form onSubmit={handleSubscribe} className="flex gap-2 max-w-sm mx-auto">
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="your@email.com"
+              className="flex-1 px-4 py-3 rounded font-montserrat text-sm focus:outline-none focus:ring-2 focus:ring-royal-gold"
+            />
+            <button
+              type="submit"
+              disabled={loading}
+              className="bg-royal-gold text-white px-5 py-3 rounded font-montserrat text-sm font-medium hover:bg-opacity-90 disabled:opacity-70 transition-all"
+            >
+              {loading ? '...' : 'Subscribe'}
+            </button>
+          </form>
+        )}
+      </div>
+    </section>
+  );
+};
+
 const Home: React.FC = () => {
   const [heroLoaded, setHeroLoaded] = useState(false);
+  const [featured, setFeatured] = useState<Product[]>([]);
+  const [trending, setTrending] = useState<Product[]>([]);
+  const [loadingFeatured, setLoadingFeatured] = useState(true);
+  const [loadingTrending, setLoadingTrending] = useState(true);
 
   useEffect(() => {
     const img = new Image();
     img.src = '/homepage.jpg';
     img.onload = () => setHeroLoaded(true);
+
+    api.get('/products/featured').then(r => setFeatured(r.data.products)).catch(() => {}).finally(() => setLoadingFeatured(false));
+    api.get('/products/trending').then(r => setTrending(r.data.products)).catch(() => {}).finally(() => setLoadingTrending(false));
   }, []);
 
   return (
     <div className="bg-royal-ivory">
+      <Helmet>
+        <title>Darbar — Luxury Mughal-Inspired Fashion</title>
+        <meta name="description" content="Discover luxury Mughal-inspired fashion crafted by master artisans. Sherwanis, lehengas, jewellery and more — heritage meets luxury at Darbar." />
+      </Helmet>
       {/* Hero */}
       <section className="relative min-h-[90vh] flex items-center overflow-hidden">
         <div
@@ -102,21 +166,26 @@ const Home: React.FC = () => {
               View all <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredProducts.map(product => (
-              <Link key={product.id} to={`/product/${product.id}`} className="group">
-                <div className="aspect-[3/4] overflow-hidden rounded-lg bg-gray-100 mb-3">
-                  <img
-                    src={product.images[0]}
-                    alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-                <h3 className="font-playfair text-base group-hover:text-royal-gold transition-colors leading-tight mb-1">{product.name}</h3>
-                <p className="font-montserrat text-sm text-gray-600">₹{product.price.toLocaleString('en-IN')}</p>
-              </Link>
-            ))}
-          </div>
+          {loadingFeatured ? (
+            <ProductGridSkeleton count={4} />
+          ) : (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+              {featured.map(product => (
+                <Link key={product._id || product.id} to={`/product/${product.slug}`} className="group">
+                  <div className="aspect-[3/4] overflow-hidden rounded-lg bg-gray-100 mb-3">
+                    <img
+                      src={getFirstImage(product.images)}
+                      alt={product.name}
+                      loading="lazy"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                  <h3 className="font-playfair text-base group-hover:text-royal-gold transition-colors leading-tight mb-1">{product.name}</h3>
+                  <p className="font-montserrat text-sm text-gray-600">₹{product.price.toLocaleString('en-IN')}</p>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -132,22 +201,27 @@ const Home: React.FC = () => {
               Browse all <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            {trendingProducts.map(product => (
-              <Link key={product.id} to={`/product/${product.id}`} className="group">
-                <div className="aspect-[3/4] overflow-hidden rounded-lg bg-gray-100 mb-3 relative">
-                  <img
-                    src={product.images[0]}
-                    alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute top-2 left-2 bg-royal-red text-white text-xs font-montserrat px-2 py-0.5 rounded">Trending</div>
-                </div>
-                <h3 className="font-playfair text-base group-hover:text-royal-gold transition-colors leading-tight mb-1">{product.name}</h3>
-                <p className="font-montserrat text-sm text-gray-600">₹{product.price.toLocaleString('en-IN')}</p>
-              </Link>
-            ))}
-          </div>
+          {loadingTrending ? (
+            <ProductGridSkeleton count={4} />
+          ) : (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+              {trending.map(product => (
+                <Link key={product._id || product.id} to={`/product/${product.slug}`} className="group">
+                  <div className="aspect-[3/4] overflow-hidden rounded-lg bg-gray-100 mb-3 relative">
+                    <img
+                      src={getFirstImage(product.images)}
+                      alt={product.name}
+                      loading="lazy"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute top-2 left-2 bg-royal-red text-white text-xs font-montserrat px-2 py-0.5 rounded">Trending</div>
+                  </div>
+                  <h3 className="font-playfair text-base group-hover:text-royal-gold transition-colors leading-tight mb-1">{product.name}</h3>
+                  <p className="font-montserrat text-sm text-gray-600">₹{product.price.toLocaleString('en-IN')}</p>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -184,6 +258,9 @@ const Home: React.FC = () => {
           ))}
         </div>
       </section>
+
+      {/* Newsletter */}
+      <NewsletterSection />
 
       {/* CTA banner */}
       <section className="bg-royal-gold py-16 text-center">

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { LayoutDashboard, Package, ShoppingBag, LogOut, Menu } from 'lucide-react';
 
 const navItems = [
@@ -9,7 +9,7 @@ const navItems = [
   { to: '/seller/orders', label: 'Orders', icon: ShoppingBag },
 ];
 
-const SellerLayout: React.FC<{ children: React.ReactNode; title: string }> = ({ children, title }) => {
+const SellerLayout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -55,11 +55,10 @@ const SellerLayout: React.FC<{ children: React.ReactNode; title: string }> = ({ 
         <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-gray-500"><Menu size={22} /></button>
-            <h1 className="font-montserrat text-sm font-medium text-gray-800">{title}</h1>
           </div>
           <Link to="/" className="font-montserrat text-sm text-gray-500 hover:text-royal-gold transition-colors">View Store</Link>
         </header>
-        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+        <main className="flex-1 overflow-y-auto p-6"><Outlet /></main>
       </div>
     </div>
   );

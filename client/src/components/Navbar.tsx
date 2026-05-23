@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ShoppingBag, Heart, Menu, X, User, ChevronDown } from 'lucide-react';
+import { ShoppingBag, Heart, Menu, X, User, ChevronDown, Moon, Sun } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import SearchBar from './SearchBar';
 
 const Navbar = () => {
   const { items } = useCart();
   const { user, isAuthenticated, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -67,12 +69,19 @@ const Navbar = () => {
             </div>
 
             {/* Desktop search */}
-            <div className="hidden lg:block">
+            <div className="hidden lg:flex items-center">
               <SearchBar />
             </div>
 
             {/* Icons */}
             <div className="flex items-center space-x-3">
+              <button
+                onClick={toggleTheme}
+                aria-label="Toggle dark mode"
+                className="text-gray-700 hover:text-royal-gold transition-colors p-1"
+              >
+                {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+              </button>
               <Link to="/liked" className="text-gray-700 hover:text-royal-red transition-colors" aria-label="Wishlist">
                 <Heart size={22} />
               </Link>

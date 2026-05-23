@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
+import api from '../services/api';
+import { useToast } from '../context/ToastContext';
 
 const Contact = () => {
-  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+  const { toast } = useToast();
+  const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -13,10 +16,14 @@ const Contact = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmitting(true);
-    // Placeholder until backend /api/contact is connected
-    await new Promise(resolve => setTimeout(resolve, 800));
-    setSubmitted(true);
-    setSubmitting(false);
+    try {
+      await api.post('/contact', formData);
+      setSubmitted(true);
+    } catch (err: any) {
+      toast(err.response?.data?.message || 'Failed to send message. Please try again.', 'error');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const inputClass =
@@ -64,6 +71,20 @@ const Contact = () => {
                   name="email"
                   required
                   value={formData.email}
+                  onChange={handleChange}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label htmlFor="subject" className="block text-sm font-medium text-gray-700 font-montserrat">
+                  Subject
+                </label>
+                <input
+                  type="text"
+                  id="subject"
+                  name="subject"
+                  required
+                  value={formData.subject}
                   onChange={handleChange}
                   className={inputClass}
                 />

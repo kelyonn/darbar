@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Eye, EyeOff, Check } from 'lucide-react';
@@ -57,28 +58,38 @@ const Register: React.FC = () => {
 
   if (successMessage) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white px-6">
-        <div className="text-center max-w-md">
-          <div className="w-16 h-16 bg-royal-green/10 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Check size={28} className="text-royal-green" />
+      <>
+        <Helmet>
+          <title>Registration Complete — Darbar</title>
+        </Helmet>
+        <div className="min-h-screen flex items-center justify-center bg-white px-6">
+          <div className="text-center max-w-md">
+            <div className="w-16 h-16 bg-royal-green/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Check size={28} className="text-royal-green" />
+            </div>
+            <h1 className="font-playfair text-3xl mb-3">Check your email</h1>
+            <p className="font-montserrat text-gray-600 text-sm leading-relaxed mb-6">
+              {successMessage}
+            </p>
+            <Link
+              to="/login"
+              className="inline-block bg-royal-gold text-white px-8 py-3 rounded font-montserrat text-sm hover:bg-opacity-90 transition-colors"
+            >
+              Go to Login
+            </Link>
           </div>
-          <h1 className="font-playfair text-3xl mb-3">Check your email</h1>
-          <p className="font-montserrat text-gray-600 text-sm leading-relaxed mb-6">
-            {successMessage}
-          </p>
-          <Link
-            to="/login"
-            className="inline-block bg-royal-gold text-white px-8 py-3 rounded font-montserrat text-sm hover:bg-opacity-90 transition-colors"
-          >
-            Go to Login
-          </Link>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen flex">
+    <>
+      <Helmet>
+        <title>Create Account — Darbar</title>
+        <meta name="description" content="Join Darbar to discover luxury Mughal-inspired fashion and manage your orders and wishlist." />
+      </Helmet>
+      <div className="min-h-screen flex">
       {/* Left panel */}
       <div
         className="hidden lg:flex lg:w-1/2 bg-royal-green flex-col justify-center px-16"
@@ -226,6 +237,7 @@ const Register: React.FC = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

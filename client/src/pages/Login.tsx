@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Eye, EyeOff } from 'lucide-react';
@@ -47,7 +48,12 @@ const Login: React.FC = () => {
     'block w-full rounded border border-gray-300 px-4 py-3 text-sm font-montserrat focus:border-royal-gold focus:outline-none focus:ring-1 focus:ring-royal-gold transition-colors';
 
   return (
-    <div className="min-h-screen flex">
+    <>
+      <Helmet>
+        <title>Sign In — Darbar</title>
+        <meta name="description" content="Sign in to your Darbar account to track orders, manage your wishlist, and access exclusive member collections." />
+      </Helmet>
+      <div className="min-h-screen flex">
       {/* Left panel */}
       <div
         className="hidden lg:flex lg:w-1/2 bg-royal-green flex-col justify-center px-16"
@@ -164,6 +170,7 @@ const Login: React.FC = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

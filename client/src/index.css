@@ -1,8 +1,8 @@
+@import './styles/animations.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import './styles/animations.css';
 
 @layer base {
   body {
@@ -10,6 +10,25 @@
     background-image: url('https://www.transparenttextures.com/patterns/arabesque.png');
     background-repeat: repeat;
   }
+
+  /* ── Dark mode ── */
+  .dark body {
+    @apply bg-gray-950 text-gray-100;
+    background-image: url('https://www.transparenttextures.com/patterns/arabesque.png');
+    background-repeat: repeat;
+  }
+  .dark .bg-white { @apply !bg-gray-900; }
+  .dark .bg-gray-50 { @apply !bg-gray-900; }
+  .dark .bg-gray-100 { @apply !bg-gray-800; }
+  .dark .bg-royal-ivory { @apply !bg-gray-950; }
+  .dark .bg-royal-cream { @apply !bg-gray-900; }
+  .dark .text-gray-600 { @apply !text-gray-400; }
+  .dark .text-gray-700 { @apply !text-gray-300; }
+  .dark .text-gray-800 { @apply !text-gray-200; }
+  .dark .text-gray-900 { @apply !text-gray-100; }
+  .dark .border-gray-100 { @apply !border-gray-800; }
+  .dark .border-gray-200 { @apply !border-gray-700; }
+  .dark .border-gray-300 { @apply !border-gray-600; }
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-playfair;
