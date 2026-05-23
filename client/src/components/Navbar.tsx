@@ -105,7 +105,7 @@ const Navbar = () => {
                     <ChevronDown size={14} className={`transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {userMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-lg shadow-lg py-1 z-50">
+                    <div className="absolute right-0 mt-2 w-52 bg-white border border-gray-100 rounded-lg shadow-lg py-1 z-50">
                       <div className="px-4 py-2 border-b border-gray-100">
                         <p className="font-montserrat text-sm font-medium text-gray-800">{user?.firstName} {user?.lastName}</p>
                         <p className="font-montserrat text-xs text-gray-400 capitalize">{user?.role}</p>
@@ -113,6 +113,9 @@ const Navbar = () => {
                       <Link to="/profile" className="block px-4 py-2 text-sm font-montserrat text-gray-700 hover:bg-gray-50">My Account</Link>
                       {(user?.role === 'seller' || user?.role === 'admin') && (
                         <Link to={user.role === 'admin' ? '/admin' : '/seller'} className="block px-4 py-2 text-sm font-montserrat text-gray-700 hover:bg-gray-50 capitalize">{user.role} Dashboard</Link>
+                      )}
+                      {user?.role === 'customer' && (
+                        <Link to="/sell" className="block px-4 py-2 text-sm font-montserrat text-royal-gold hover:bg-amber-50">Become a Seller ✦</Link>
                       )}
                       <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm font-montserrat text-royal-red hover:bg-red-50">Sign Out</button>
                     </div>
@@ -148,6 +151,9 @@ const Navbar = () => {
                 <Link to="/profile" className="block font-montserrat text-gray-700 hover:text-royal-red text-sm">My Account</Link>
                 {(user?.role === 'seller' || user?.role === 'admin') && (
                   <Link to={user.role === 'admin' ? '/admin' : '/seller'} className="block font-montserrat text-gray-700 hover:text-royal-red text-sm capitalize">{user.role} Dashboard</Link>
+                )}
+                {user?.role === 'customer' && (
+                  <Link to="/sell" className="block font-montserrat text-royal-gold text-sm font-medium">Become a Seller ✦</Link>
                 )}
                 <button onClick={handleLogout} className="block font-montserrat text-royal-red text-sm">Sign Out</button>
               </>

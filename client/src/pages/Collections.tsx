@@ -72,19 +72,19 @@ const Collections: React.FC<CollectionsProps> = ({ category }) => {
         <meta name="description" content="Shop luxury Mughal-inspired fashion at Darbar. Browse our curated collections of sherwanis, lehengas, and traditional accessories." />
       </Helmet>
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-end mb-8">
-        <h1 className="font-playfair text-4xl">
-          {searchQuery ? `Search Results for "${searchQuery}"` : category ? `${category.charAt(0).toUpperCase() + category.slice(1)} Collection` : 'All Collections'}
-        </h1>
-        {searchQuery && (
-          <button onClick={() => setSearchParams({})} className="text-sm text-gray-500 hover:text-royal-gold font-montserrat transition-colors">
-            Clear Search
-          </button>
-        )}
-      </div>
+        <div className="flex flex-wrap justify-between items-end gap-3 mb-8">
+          <h1 className="font-playfair text-3xl sm:text-4xl">
+            {searchQuery ? `Results for "${searchQuery}"` : category ? `${category.charAt(0).toUpperCase() + category.slice(1)} Collection` : 'All Collections'}
+          </h1>
+          {searchQuery && (
+            <button onClick={() => setSearchParams({})} className="text-sm text-gray-500 hover:text-royal-gold font-montserrat transition-colors">
+              Clear Search
+            </button>
+          )}
+        </div>
 
       {/* Filters */}
-      <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="mb-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
         <div>
           <h3 className="font-montserrat text-lg mb-2">Price Range</h3>
           <input
@@ -135,7 +135,7 @@ const Collections: React.FC<CollectionsProps> = ({ category }) => {
           <h2 className="font-playfair text-2xl text-gray-400">No products found</h2>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
           {filteredProducts.map((product: Product) => (
             <div key={product._id || product.id} className="group relative">
               <Link to={`/product/${product.slug}`} className="block">

@@ -146,11 +146,11 @@ const Checkout = () => {
     <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
       <h1 className="font-playfair text-3xl mb-8">Checkout</h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+        <form onSubmit={handleSubmit} className="space-y-6 order-2 lg:order-1">
           <h2 className="font-playfair text-xl">Shipping Details</h2>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="firstName" className={labelClass}>First Name</label>
               <input type="text" id="firstName" name="firstName" required value={formData.firstName} onChange={handleInputChange} className={inputClass} />
@@ -176,7 +176,7 @@ const Checkout = () => {
             <input type="text" id="address" name="address" required value={formData.address} onChange={handleInputChange} className={inputClass} />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="city" className={labelClass}>City</label>
               <input type="text" id="city" name="city" required value={formData.city} onChange={handleInputChange} className={inputClass} />
@@ -187,7 +187,7 @@ const Checkout = () => {
             </div>
           </div>
 
-          <div className="w-1/2">
+          <div className="w-full sm:w-1/2">
             <label htmlFor="pincode" className={labelClass}>PIN Code</label>
             <input type="text" id="pincode" name="pincode" required maxLength={6} value={formData.pincode} onChange={handleInputChange} className={inputClass} />
           </div>
@@ -201,7 +201,8 @@ const Checkout = () => {
           </button>
         </form>
 
-        <div>
+        {/* Order Summary */}
+        <div className="order-1 lg:order-2">
           <h2 className="font-playfair text-xl mb-6">Order Summary</h2>
           <div className="bg-gray-50 rounded-lg p-6 space-y-4">
             {items.map(item => (
@@ -213,7 +214,7 @@ const Checkout = () => {
                 <p className="font-montserrat text-sm font-semibold">₹{(item.price * item.quantity).toLocaleString('en-IN')}</p>
               </div>
             ))}
-            
+
             <div className="pt-4 pb-2">
               <label htmlFor="coupon" className="block text-xs font-montserrat text-gray-500 mb-2">Have a coupon code?</label>
               <div className="flex gap-2">
@@ -250,3 +251,4 @@ const Checkout = () => {
 };
 
 export default Checkout;
+
