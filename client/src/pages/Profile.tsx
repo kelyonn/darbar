@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
-import { User, Package, LogOut, Settings } from 'lucide-react';
+import { User, Package, LogOut, Settings, ExternalLink } from 'lucide-react';
 
 const Profile: React.FC = () => {
   const { user, logout, refreshUser } = useAuth();
@@ -13,6 +14,18 @@ const Profile: React.FC = () => {
   const [passwords, setPasswords] = useState({ currentPassword: '', newPassword: '' });
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'orders') {
+      setLoadingOrders(true);
+      api.get('/orders')
+        .then(res => setOrders(res.data.orders))
+        .catch(err => console.error(err))
+        .finally(() => setLoadingOrders(false));
+    }
+  }, [activeTab]);
 
   const showMsg = (type: 'success' | 'error', text: string) => {
     setMessage({ type, text });
@@ -55,7 +68,12 @@ const Profile: React.FC = () => {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-10 sm:px-6 lg:px-8">
+    <>
+      <Helmet>
+        <title>My Account — Darbar</title>
+        <meta name="description" content="Manage your Darbar account, orders, and profile settings." />
+      </Helmet>
+      <div className="max-w-5xl mx-auto px-4 py-10 sm:px-6 lg:px-8">
       <div className="flex items-center justify-between mb-8">
         <h1 className="font-playfair text-3xl">My Account</h1>
         <button onClick={handleLogout} className="flex items-center gap-2 text-sm font-montserrat text-gray-500 hover:text-royal-red transition-colors">
@@ -92,6 +110,16 @@ const Profile: React.FC = () => {
                   <tab.icon size={16} />{tab.label}
                 </button>
               ))}
+              {user?.role === 'admin' && (
+                <Link to="/admin" className="w-full flex items-center gap-3 px-3 py-2 rounded text-sm font-montserrat text-gray-600 hover:bg-gray-50 mt-4 border-t pt-4">
+                  <ExternalLink size={16} /> Admin Portal
+                </Link>
+              )}
+              {user?.role === 'seller' && (
+                <Link to="/seller" className="w-full flex items-center gap-3 px-3 py-2 rounded text-sm font-montserrat text-gray-600 hover:bg-gray-50 mt-4 border-t pt-4">
+                  <ExternalLink size={16} /> Seller Portal
+                </Link>
+              )}
             </nav>
           </div>
         </div>
@@ -136,7 +164,7 @@ const Profile: React.FC = () => {
               <div>
                 <label className={labelClass}>New Password</label>
                 <input type="password" required minLength={8} value={passwords.newPassword} onChange={e => setPasswords(p => ({ ...p, newPassword: e.target.value }))} className={inputClass} />
-                <p className="text-xs text-gray-400 font-montserrat mt-1">Min. 8 characters, one uppercase, one number</p>
+                <p className="text-xs text-gray-400 font-montserrat mt-1">Min. 8 characters</p>
               </div>
               <button type="submit" disabled={loading} className="bg-royal-gold text-white px-6 py-2.5 rounded font-montserrat text-sm hover:bg-opacity-90 disabled:opacity-60 transition-all">
                 {loading ? 'Updating...' : 'Update Password'}
@@ -147,18 +175,71 @@ const Profile: React.FC = () => {
           {activeTab === 'orders' && (
             <div>
               <h2 className="font-playfair text-xl mb-6">Order History</h2>
-              <div className="text-center py-12 text-gray-400 font-montserrat text-sm">
-                <Package size={40} className="mx-auto mb-3 opacity-30" />
-                <p>Your order history will appear here once connected to the backend.</p>
-                <Link to="/collections" className="mt-4 inline-block text-royal-gold hover:underline text-sm">
-                  Browse Collections
-                </Link>
-              </div>
+              {loadingOrders ? (
+                <div className="flex justify-center items-center py-12">
+                  <div className="w-8 h-8 border-2 border-royal-gold border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : orders.length === 0 ? (
+                <div className="text-center py-12 text-gray-400 font-montserrat text-sm border rounded-lg">
+                  <Package size={40} className="mx-auto mb-3 opacity-30" />
+                  <p>You haven't placed any orders yet.</p>
+                  <Link to="/collections" className="mt-4 inline-block text-royal-gold hover:underline text-sm">
+                    Browse Collections
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {orders.map(order => (
+                    <div key={order._id} className="border border-gray-200 rounded-lg overflow-hidden">
+                      <div className="bg-gray-50 px-6 py-4 flex justify-between items-center border-b border-gray-200">
+                        <div>
+                          <p className="font-montserrat text-xs text-gray-500 uppercase tracking-wide">Order Number</p>
+                          <p className="font-montserrat text-sm font-medium">{order.orderNumber}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-montserrat text-xs text-gray-500 uppercase tracking-wide">Date Placed</p>
+                          <p className="font-montserrat text-sm">{new Date(order.createdAt).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                      <div className="px-6 py-4">
+                        {order.items.map((item: any, idx: number) => (
+                          <div key={idx} className="flex items-center gap-4 py-4 border-b border-gray-100 last:border-0 last:pb-0">
+                            <img src={item.image} alt={item.name} className="w-16 h-20 object-cover rounded" />
+                            <div className="flex-1">
+                              <h4 className="font-playfair text-lg">{item.name}</h4>
+                              <p className="font-montserrat text-xs text-gray-500">Qty: {item.quantity} {item.size && `| Size: ${item.size}`} {item.color && `| Color: ${item.color}`}</p>
+                            </div>
+                            <div className="text-right font-montserrat font-medium">
+                              ₹{(item.price * item.quantity).toLocaleString('en-IN')}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <span className="font-montserrat text-xs text-gray-500 uppercase tracking-wide">Status:</span>
+                          <span className={`px-2 py-1 rounded text-xs font-montserrat font-medium ${
+                            order.orderStatus === 'delivered' ? 'bg-green-100 text-green-800' :
+                            order.orderStatus === 'cancelled' ? 'bg-red-100 text-red-800' :
+                            'bg-blue-100 text-blue-800'
+                          }`}>
+                            {order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1)}
+                          </span>
+                        </div>
+                        <p className="font-montserrat font-semibold text-lg">
+                          Total: ₹{order.total.toLocaleString('en-IN')}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
       </div>
     </div>
+    </>
   );
 };
 

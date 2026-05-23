@@ -113,4 +113,70 @@ router.get('/coupons', async (_req: AuthRequest, res: Response, next: NextFuncti
   } catch (err) { next(err); }
 });
 
+// GET /api/admin/analytics?period=30d|7d|90d|1y
+router.get('/analytics', async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const { period = '30d' } = req.query as Record<string, string>;
+    const days = period === '7d' ? 7 : period === '90d' ? 90 : period === '1y' ? 365 : 30;
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    const prevSince = new Date(Date.now() - 2 * days * 24 * 60 * 60 * 1000);
+
+    const [monthly, categories, topProducts, summary, prevSummary, totalUsers, totalProducts] = await Promise.all([
+      // Monthly revenue buckets
+      Order.aggregate([
+        { $match: { paymentStatus: 'paid', createdAt: { $gte: since } } },
+        { $group: { _id: { year: { $year: '$createdAt' }, month: { $month: '$createdAt' } }, revenue: { $sum: '$total' }, orders: { $sum: 1 } } },
+        { $sort: { '_id.year': 1, '_id.month': 1 } },
+      ]),
+      // Category breakdown
+      Order.aggregate([
+        { $match: { paymentStatus: 'paid', createdAt: { $gte: since } } },
+        { $unwind: '$items' },
+        { $group: { _id: '$items.category', count: { $sum: '$items.quantity' }, revenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } } } },
+        { $sort: { revenue: -1 } }, { $limit: 6 },
+      ]),
+      // Top products by units sold
+      Order.aggregate([
+        { $match: { paymentStatus: 'paid', createdAt: { $gte: since } } },
+        { $unwind: '$items' },
+        { $group: { _id: '$items.productId', name: { $first: '$items.name' }, sold: { $sum: '$items.quantity' }, revenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } } } },
+        { $sort: { sold: -1 } }, { $limit: 10 },
+      ]),
+      // Current period summary
+      Order.aggregate([
+        { $match: { paymentStatus: 'paid', createdAt: { $gte: since } } },
+        { $group: { _id: null, total: { $sum: '$total' }, count: { $sum: 1 } } },
+      ]),
+      // Previous period for % change
+      Order.aggregate([
+        { $match: { paymentStatus: 'paid', createdAt: { $gte: prevSince, $lt: since } } },
+        { $group: { _id: null, total: { $sum: '$total' }, count: { $sum: 1 } } },
+      ]),
+      User.countDocuments(),
+      Product.countDocuments({ isActive: true }),
+    ]);
+
+    const curr = summary[0] || { total: 0, count: 0 };
+    const prev = prevSummary[0] || { total: 0, count: 0 };
+    const revenueChange = prev.total > 0 ? Math.round(((curr.total - prev.total) / prev.total) * 100) : 0;
+    const orderChange = prev.count > 0 ? Math.round(((curr.count - prev.count) / prev.count) * 100) : 0;
+
+    res.json({
+      success: true,
+      monthly,
+      categories,
+      topProducts,
+      summary: {
+        totalRevenue: curr.total,
+        totalOrders: curr.count,
+        totalUsers,
+        totalProducts,
+        revenueChange,
+        orderChange,
+      },
+    });
+  } catch (err) { next(err); }
+});
+
 export default router;
+

@@ -5,6 +5,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
+import { startAbandonedCartCron } from './utils/abandonedCartCron';
 
 import { config } from './config/env';
 import connectDatabase from './config/database';
@@ -23,6 +24,8 @@ import contactRoutes from './routes/contact';
 import newsletterRoutes from './routes/newsletter';
 import adminRoutes from './routes/admin';
 import sellerRoutes from './routes/seller';
+import sellersRoutes from './routes/sellers';
+import uploadRoutes from './routes/upload';
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -80,6 +83,8 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/newsletter', newsletterRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/seller', sellerRoutes);
+app.use('/api/sellers', sellersRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // 404 and error handling
 app.use(notFoundHandler);
@@ -88,6 +93,7 @@ app.use(errorHandler);
 // Start server
 const start = async () => {
   await connectDatabase();
+  startAbandonedCartCron();
   httpServer.listen(config.port, () => {
     console.log(`Server running on port ${config.port} [${config.nodeEnv}]`);
   });

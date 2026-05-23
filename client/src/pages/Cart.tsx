@@ -24,7 +24,7 @@ const Cart = () => {
             {items.map(item => (
               <div key={item.id} className="flex items-center gap-4 border rounded-lg p-4 bg-white">
                 <img 
-                  src={item.images[0]} 
+                  src={typeof item.images[0] === 'string' ? item.images[0] : (item.images[0] as any)?.url || ''} 
                   alt={item.name} 
                   className="w-24 h-24 object-cover rounded"
                 />
