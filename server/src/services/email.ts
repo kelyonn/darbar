@@ -92,12 +92,16 @@ const inlineFallback = (name: string, vars: Record<string, string>): string => {
 interface SendEmailOptions {
   to: string;
   subject: string;
-  template: string;
-  variables: Record<string, string>;
+  template?: string;
+  html?: string;
+  variables?: Record<string, string>;
 }
 
 export const sendEmail = async (options: SendEmailOptions): Promise<void> => {
-  const html = loadTemplate(options.template, options.variables);
+  let html = options.html;
+  if (!html && options.template) {
+    html = loadTemplate(options.template, options.variables || {});
+  }
 
   await transporter.sendMail({
     from: config.smtp.from,

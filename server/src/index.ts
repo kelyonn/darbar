@@ -99,9 +99,11 @@ const start = async () => {
   });
 };
 
-start().catch(err => {
-  console.error('Failed to start server:', err);
-  process.exit(1);
-});
+if (config.nodeEnv !== 'test') {
+  start().catch(err => {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  });
+}
 
 export default app;
