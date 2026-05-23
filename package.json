@@ -9,6 +9,9 @@
     "dev:server": "cd server && npm run dev",
     "build:client": "cd client && npm run build",
     "build:server": "cd server && npm run build",
+    "test": "npm run test:server && npm run test:client",
+    "test:client": "cd client && npx vitest run",
+    "test:server": "cd server && NODE_ENV=test npx jest --forceExit",
     "install:all": "npm install && cd client && npm install && cd ../server && npm install",
     "lint": "cd client && npm run lint"
   },
