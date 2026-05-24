@@ -86,8 +86,19 @@ app.use('/api/seller', sellerRoutes);
 app.use('/api/sellers', sellersRoutes);
 app.use('/api/upload', uploadRoutes);
 
-// 404 and error handling
-app.use(notFoundHandler);
+// Serve frontend in production
+if (config.nodeEnv === 'production') {
+  const path = require('path');
+  app.use(express.static(path.join(__dirname, '../../client/dist')));
+  
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
+  });
+} else {
+  app.use(notFoundHandler);
+}
+
+// Error handling (always after all routes)
 app.use(errorHandler);
 
 // Start server
