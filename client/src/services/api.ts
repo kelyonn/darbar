@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.PROD ? 'https://darbar.onrender.com/api' : 'http://localhost:5001/api',
+  baseURL: import.meta.env.PROD ? 'https://darbar.onrender.com/api' : '/api',
   headers: { 'Content-Type': 'application/json' },
 });
 

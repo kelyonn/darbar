@@ -6,7 +6,7 @@ interface PurchaseEvent {
   city: string;
 }
 
-const socket = io(import.meta.env.PROD ? 'https://darbar.onrender.com' : 'http://localhost:5001', {
+const socket = io(import.meta.env.PROD ? 'https://darbar.onrender.com' : '', {
   transports: ['websocket'],
   autoConnect: true,
 });
