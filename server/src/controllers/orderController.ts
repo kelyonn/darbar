@@ -11,10 +11,13 @@ import { sendOrderConfirmationEmail } from '../services/email';
 import { io } from '../index';
 import { config } from '../config/env';
 
-const razorpay = new Razorpay({
-  key_id: config.razorpay.keyId,
-  key_secret: config.razorpay.keySecret,
-});
+let razorpay: any = null;
+if (config.razorpay.keyId && config.razorpay.keySecret) {
+  razorpay = new Razorpay({
+    key_id: config.razorpay.keyId,
+    key_secret: config.razorpay.keySecret,
+  });
+}
 
 const generateOrderNumber = (): string => {
   return 'DBR-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
@@ -90,6 +93,11 @@ export const createOrder = async (req: AuthRequest, res: Response, next: NextFun
     const total = Math.max(0, subtotal - discount);
 
     // Create Razorpay order
+    if (!razorpay) {
+      res.status(500).json({ message: 'Payment gateway not configured. Please add Razorpay keys.' });
+      return;
+    }
+
     const razorpayOrder = await razorpay.orders.create({
       amount: Math.round(total * 100), // paise
       currency: 'INR',
