@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: import.meta.env.PROD ? 'https://darbar.onrender.com/api' : 'http://localhost:5001/api',
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -26,7 +26,7 @@ api.interceptors.response.use(
 
       if (refreshToken) {
         try {
-          const { data } = await axios.post('/api/auth/refresh', { refreshToken });
+          const { data } = await axios.post(`${api.defaults.baseURL}/auth/refresh`, { refreshToken });
           localStorage.setItem('accessToken', data.accessToken);
           localStorage.setItem('refreshToken', data.refreshToken);
           original.headers.Authorization = `Bearer ${data.accessToken}`;
