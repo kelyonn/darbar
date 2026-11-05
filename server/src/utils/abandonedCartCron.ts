@@ -16,7 +16,7 @@ function schedule(intervalMs: number, fn: () => Promise<void>) {
   setTimeout(tick, intervalMs);
 }
 
-async function sendAbandonedCartEmails() {
+export async function sendAbandonedCartEmails() {
   if (!config.smtp.user) return; // Skip if SMTP not configured
 
   const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24h ago
