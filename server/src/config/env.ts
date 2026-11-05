@@ -43,5 +43,12 @@ export const config = {
     apiKey: process.env.CLOUDINARY_API_KEY || '',
     apiSecret: process.env.CLOUDINARY_API_SECRET || '',
   },
-  clientUrl: (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, ''),
+  clientUrl: (
+    process.env.CLIENT_URL ||
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : 'http://localhost:5173')
+  ).replace(/\/$/, ''),
+  isVercel: Boolean(process.env.VERCEL),
+  // Escape hatches so a deployment works before SMTP / Razorpay are configured.
+  autoVerifyEmail: process.env.AUTO_VERIFY_EMAIL === 'true',
+  allowMockPayments: process.env.ALLOW_MOCK_PAYMENTS === 'true',
 };

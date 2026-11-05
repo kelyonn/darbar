@@ -19,7 +19,7 @@ if (config.razorpay.keyId && config.razorpay.keySecret) {
   });
 }
 
-export const devMockPayments = !razorpay && config.nodeEnv !== 'production';
+export const devMockPayments = !razorpay && (config.nodeEnv !== 'production' || config.allowMockPayments);
 
 const generateOrderNumber = (): string => {
   return 'DBR-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();

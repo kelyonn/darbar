@@ -2,6 +2,15 @@ import mongoose from 'mongoose';
 import { config } from './env';
 
 const connect = async (): Promise<void> => {
+  if (mongoose.connection.readyState === 1) return; // already connected (warm serverless instance)
+  if (inflight) return inflight;
+  inflight = doConnect().finally(() => { inflight = null; });
+  return inflight;
+};
+
+let inflight: Promise<void> | null = null;
+
+const doConnect = async (): Promise<void> => {
   let attempts = 0;
   const maxAttempts = 5;
 

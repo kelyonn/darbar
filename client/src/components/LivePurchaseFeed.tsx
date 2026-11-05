@@ -6,9 +6,10 @@ interface PurchaseEvent {
   city: string;
 }
 
-const socket = io(import.meta.env.PROD ? 'https://darbar.onrender.com' : '', {
+const socket = io('', {
   transports: ['websocket'],
   autoConnect: true,
+  reconnectionAttempts: 3, // no websocket server on serverless hosts; stop retrying quietly
 });
 
 const LivePurchaseFeed: React.FC = () => {

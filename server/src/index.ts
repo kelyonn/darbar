@@ -1,11 +1,13 @@
 import express from 'express';
 import http from 'http';
+import path from 'path';
+import fs from 'fs';
 import { Server as SocketServer } from 'socket.io';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
-import { startAbandonedCartCron } from './utils/abandonedCartCron';
+import { startAbandonedCartCron, sendAbandonedCartEmails } from './utils/abandonedCartCron';
 
 import { config } from './config/env';
 import connectDatabase from './config/database';
@@ -46,7 +48,8 @@ io.on('connection', socket => {
 app.set('trust proxy', 1);
 
 // Security
-app.use(helmet());
+// CSP is relaxed because the storefront loads Razorpay, Google Fonts and remote images
+app.use(helmet({ contentSecurityPolicy: false, crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(cors({
   origin: config.clientUrl,
   credentials: true,
@@ -73,6 +76,26 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', env: config.nodeEnv });
 });
 
+// Serverless (Vercel): connect lazily and reuse the connection across invocations
+if (config.isVercel) {
+  app.use('/api', async (_req, _res, next) => {
+    try { await connectDatabase(); next(); } catch (err) { next(err); }
+  });
+}
+
+// Scheduled job entry point (Vercel Cron sends Authorization: Bearer $CRON_SECRET)
+app.get('/api/cron/abandoned-cart', async (req, res, next) => {
+  try {
+    const secret = process.env.CRON_SECRET;
+    if (!secret || req.headers.authorization !== `Bearer ${secret}`) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+    await sendAbandonedCartEmails();
+    res.json({ success: true });
+  } catch (err) { next(err); }
+});
+
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
@@ -89,6 +112,15 @@ app.use('/api/seller', sellerRoutes);
 app.use('/api/sellers', sellersRoutes);
 app.use('/api/upload', uploadRoutes);
 
+// Serve the built frontend (single-service deployment)
+const clientDist = path.resolve(__dirname, '../../client/dist');
+if (fs.existsSync(path.join(clientDist, 'index.html'))) {
+  app.use(express.static(clientDist, { maxAge: '1h', index: false }));
+  app.get(/^\/(?!api\/|socket\.io\/|health).*/, (_req, res) => {
+    res.sendFile(path.join(clientDist, 'index.html'));
+  });
+}
+
 // 404 and error handling
 app.use(notFoundHandler);
 app.use(errorHandler);
@@ -102,7 +134,7 @@ const start = async () => {
   });
 };
 
-if (config.nodeEnv !== 'test') {
+if (config.nodeEnv !== 'test' && !config.isVercel) {
   start().catch(err => {
     console.error('Failed to start server:', err);
     process.exit(1);

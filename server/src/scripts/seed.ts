@@ -372,7 +372,7 @@ const seed = async () => {
       firstName: 'Darbar',
       lastName: 'Admin',
       email: adminEmail,
-      passwordHash: 'Admin@123456',
+      passwordHash: process.env.SEED_ADMIN_PASSWORD || 'Admin@123456',
       role: 'admin',
       isEmailVerified: true,
     });
@@ -389,7 +389,7 @@ const seed = async () => {
       firstName: 'Darbar',
       lastName: 'Seller',
       email: sellerEmail,
-      passwordHash: 'Seller@123456',
+      passwordHash: process.env.SEED_SELLER_PASSWORD || 'Seller@123456',
       role: 'seller',
       isEmailVerified: true,
     });

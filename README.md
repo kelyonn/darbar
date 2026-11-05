@@ -75,7 +75,32 @@ npm run test
 
 Server tests use an in-memory MongoDB. If it can't be downloaded in your environment, point them at any running MongoDB instead: `TEST_MONGODB_URI=mongodb://127.0.0.1:27017/darbar-test npm run test:server`.
 
-## 5. Production Build
+## 5. Deploying to Vercel
+
+The repo deploys as a single Vercel project: the Vite app is served statically and the Express API runs as one serverless function (`api/index.ts`, configured in `vercel.json`). Vercel auto-deploys every push (branches get Preview URLs; the production branch gets the production URL).
+
+1. Create a free MongoDB Atlas cluster, create a database user, and under Network Access allow `0.0.0.0/0` (Vercel has no fixed IPs). Copy the `mongodb+srv://...` connection string.
+2. In Vercel, open the project, then **Settings > Environment Variables**, and add:
+
+| Variable | Value |
+|---|---|
+| `MONGODB_URI` | your Atlas connection string (include a database name, e.g. `.../darbar`) |
+| `JWT_ACCESS_SECRET` | any random string, 32+ characters |
+| `JWT_REFRESH_SECRET` | a different random string, 32+ characters |
+| `AUTO_VERIFY_EMAIL` | `true` until SMTP is configured (otherwise new users can never verify) |
+| `ALLOW_MOCK_PAYMENTS` | `true` for simulated checkout until Razorpay keys are set. Remove it once real keys are added |
+| `CRON_SECRET` | any random string (secures the daily abandoned-cart job) |
+
+   Optional: `CLIENT_URL` (custom domain), SMTP, Razorpay and Cloudinary keys as in `.env.example`.
+3. Load the products and accounts into Atlas once, from your computer:
+
+```bash
+MONGODB_URI="mongodb+srv://..." SEED_ADMIN_PASSWORD="choose-a-strong-password" npm run seed
+```
+
+4. Redeploy (or push a commit). Vercel Hobby has no WebSockets, so the live "someone just purchased" popup is inactive there.
+
+## 6. Production Build
 
 To build the application for production deployment:
 ```bash

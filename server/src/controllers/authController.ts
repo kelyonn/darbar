@@ -33,7 +33,7 @@ export const register = async (req: Request, res: Response, next: NextFunction):
       verificationToken,
       verificationTokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24h
       // Without SMTP in non-production there is no way to receive the link, so auto-verify.
-      isEmailVerified: !smtpConfigured && config.nodeEnv !== 'production',
+      isEmailVerified: config.autoVerifyEmail || (!smtpConfigured && config.nodeEnv !== 'production'),
     });
 
     // Send verification email — don't block registration if it fails
