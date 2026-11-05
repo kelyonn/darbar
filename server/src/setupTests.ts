@@ -5,7 +5,10 @@ let mongoServer: MongoMemoryServer;
 
 beforeAll(async () => {
   // Use TEST_MONGODB_URI if provided, otherwise spin up an in-memory MongoDB.
-  const mongoUri = process.env.TEST_MONGODB_URI || (mongoServer = await MongoMemoryServer.create()).getUri();
+  const sharedUri = process.env.TEST_MONGODB_URI
+    ? process.env.TEST_MONGODB_URI.replace(/(\/[^/?]*)(\?|$)/, `$1-w${process.env.JEST_WORKER_ID || 0}$2`) // one DB per jest worker
+    : undefined;
+  const mongoUri = sharedUri || (mongoServer = await MongoMemoryServer.create()).getUri();
   await mongoose.connect(mongoUri);
 });
 
