@@ -10,16 +10,17 @@ const required = [
   'JWT_REFRESH_SECRET',
 ];
 
-for (const key of required) {
-  if (!process.env[key]) {
-    throw new Error(`Missing required environment variable: ${key}`);
-  }
+export const missingEnv = required.filter(key => !process.env[key]);
+
+// On serverless hosts we keep the function alive and report the problem per request instead of crashing on import.
+if (missingEnv.length && !process.env.VERCEL) {
+  throw new Error(`Missing required environment variable: ${missingEnv[0]}`);
 }
 
 export const config = {
   port: parseInt(process.env.PORT || '5001', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
-  mongoUri: process.env.MONGODB_URI!,
+  mongoUri: process.env.MONGODB_URI || '',
   jwt: {
     accessSecret: process.env.JWT_ACCESS_SECRET!,
     refreshSecret: process.env.JWT_REFRESH_SECRET!,

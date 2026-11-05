@@ -32,8 +32,8 @@ export const register = async (req: Request, res: Response, next: NextFunction):
       passwordHash: password,
       verificationToken,
       verificationTokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24h
-      // Without SMTP in non-production there is no way to receive the link, so auto-verify.
-      isEmailVerified: config.autoVerifyEmail || (!smtpConfigured && config.nodeEnv !== 'production'),
+      // Without SMTP nobody can receive the verification link, so auto-verify rather than lock users out.
+      isEmailVerified: config.autoVerifyEmail || !smtpConfigured,
     });
 
     // Send verification email — don't block registration if it fails

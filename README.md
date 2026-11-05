@@ -87,7 +87,6 @@ The repo deploys as a single Vercel project whose **Root Directory is `client`**
 | `MONGODB_URI` | your Atlas connection string (include a database name, e.g. `.../darbar`) |
 | `JWT_ACCESS_SECRET` | any random string, 32+ characters |
 | `JWT_REFRESH_SECRET` | a different random string, 32+ characters |
-| `AUTO_VERIFY_EMAIL` | `true` until SMTP is configured (otherwise new users can never verify) |
 | `ALLOW_MOCK_PAYMENTS` | `true` for simulated checkout until Razorpay keys are set. Remove it once real keys are added |
 | `CRON_SECRET` | any random string (secures the daily abandoned-cart job) |
 
@@ -98,7 +97,8 @@ The repo deploys as a single Vercel project whose **Root Directory is `client`**
 MONGODB_URI="mongodb+srv://..." SEED_ADMIN_PASSWORD="choose-a-strong-password" npm run seed
 ```
 
-4. Redeploy (or push a commit). Vercel Hobby has no WebSockets, so the live "someone just purchased" popup is inactive there.
+4. Redeploy (or push a commit), then open `/api/diagnostics` on your site. It lists any missing variables and whether the database connects.
+5. Notes: with no SMTP configured, accounts are verified automatically.  Vercel Hobby has no WebSockets, so the live "someone just purchased" popup is inactive there.
 
 ## 6. Production Build
 
