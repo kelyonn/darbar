@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import api from '../../services/api';
 import { getFirstImage } from '../../utils/images';
-import { Plus, Edit2, Trash2, X, Upload, ImagePlus } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, ImagePlus } from 'lucide-react';
 import { Product } from '../../types';
 
 const SellerProducts: React.FC = () => {
@@ -38,7 +37,7 @@ const SellerProducts: React.FC = () => {
     try {
       const { data } = await api.get('/seller/products');
       setProducts(data.products);
-    } catch (err) {
+    } catch {
       toast('Failed to load your products', 'error');
     } finally {
       setLoading(false);
@@ -159,7 +158,7 @@ const SellerProducts: React.FC = () => {
       await api.delete(`/products/${id}`);
       toast('Product deleted', 'success');
       fetchProducts();
-    } catch (err) {
+    } catch {
       toast('Failed to delete product', 'error');
     }
   };

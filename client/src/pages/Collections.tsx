@@ -48,7 +48,7 @@ const Collections: React.FC<CollectionsProps> = ({ category }) => {
         if (availableFabrics.length === 0) {
           setAvailableFabrics(fabrics);
         }
-      } catch (err) {
+      } catch {
         toast('Failed to load products', 'error');
       } finally {
         setLoading(false);

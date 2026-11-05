@@ -4,13 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import { Store, CheckCircle, AlertCircle } from 'lucide-react';
 import api from '../../services/api';
 import { useToast } from '../../context/ToastContext';
-import { useAuth } from '../../context/AuthContext';
 
 const inputClass = 'block w-full rounded border border-gray-300 px-4 py-3 text-sm font-montserrat focus:border-royal-gold focus:outline-none focus:ring-1 focus:ring-royal-gold transition-colors';
 
 const SellerApply: React.FC = () => {
   const { toast } = useToast();
-  const { user, refreshUser } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);

@@ -26,7 +26,7 @@ const AdminAnalytics: React.FC = () => {
         setCategories(data.categories || []);
         setTopProducts(data.topProducts || []);
         setSummary(data.summary || summary);
-      } catch {}
+      } catch { /* ignore */ }
       setLoading(false);
     };
     fetch();

@@ -1,0 +1,5 @@
+// Provide safe defaults so tests run without a real .env file.
+process.env.NODE_ENV = 'test';
+process.env.MONGODB_URI ||= 'mongodb://127.0.0.1:27017/darbar-test';
+process.env.JWT_ACCESS_SECRET ||= 'test_access_secret_at_least_32_characters_long';
+process.env.JWT_REFRESH_SECRET ||= 'test_refresh_secret_at_least_32_characters_long';
