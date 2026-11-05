@@ -21,9 +21,8 @@ export const errorHandler = (
   const statusCode = err.statusCode || 500;
   const message = err.isOperational ? err.message : 'An unexpected error occurred';
 
-  if (process.env.NODE_ENV !== 'production') {
-    console.error(err);
-  }
+  // Always log (Vercel/Render capture stdout); never send internals to the client
+  console.error(err);
 
   res.status(statusCode).json({
     success: false,

@@ -9,7 +9,7 @@ import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import { startAbandonedCartCron, sendAbandonedCartEmails } from './utils/abandonedCartCron';
 
-import { config } from './config/env';
+import { config, missingEnv } from './config/env';
 import connectDatabase from './config/database';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 
@@ -76,9 +76,28 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', env: config.nodeEnv });
 });
 
+// Diagnostics: shows what is misconfigured without exposing any secret values
+app.get('/api/diagnostics', async (_req, res) => {
+  let db = 'not attempted';
+  if (!missingEnv.length) {
+    try { await connectDatabase(); db = 'connected'; } catch (err) { db = (err as Error).message; }
+  }
+  res.json({
+    ok: !missingEnv.length && db === 'connected',
+    missingEnv,
+    database: db,
+    emailVerification: config.autoVerifyEmail ? 'auto-verify on' : 'email link required',
+    payments: config.allowMockPayments ? 'simulated allowed' : 'razorpay required in production',
+  });
+});
+
 // Serverless (Vercel): connect lazily and reuse the connection across invocations
 if (config.isVercel) {
-  app.use('/api', async (_req, _res, next) => {
+  app.use('/api', async (_req, res, next) => {
+    if (missingEnv.length) {
+      res.status(503).json({ success: false, message: `Server is not configured: set ${missingEnv.join(', ')} in the Vercel project's environment variables and redeploy.` });
+      return;
+    }
     try { await connectDatabase(); next(); } catch (err) { next(err); }
   });
 }
