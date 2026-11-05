@@ -6,6 +6,7 @@ import { User } from '../models/User';
 import { Product } from '../models/Product';
 import { Order } from '../models/Order';
 
+import { sellerTotals } from '../utils/stats';
 const router = Router();
 router.use(authenticate);
 
@@ -100,26 +101,17 @@ router.put('/:id/approve', requireRole('admin'), async (req: AuthRequest, res: R
 // GET /api/sellers/:id/stats  — admin: seller performance
 router.get('/:id/stats', requireRole('admin'), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const [productCount, revenue] = await Promise.all([
+    const [productCount, totals] = await Promise.all([
       Product.countDocuments({ sellerId: req.params.id, isActive: true }),
-      Order.aggregate([
-        { $unwind: '$items' },
-        {
-          $match: {
-            'items.sellerId': new (await import('mongoose')).default.Types.ObjectId(req.params.id),
-            paymentStatus: 'paid',
-          } as Record<string, unknown>,
-        },
-        { $group: { _id: null, total: { $sum: { $multiply: ['$items.price', '$items.quantity'] } }, orders: { $addToSet: '$_id' } } },
-      ]),
+      sellerTotals(req.params.id),
     ]);
 
     res.json({
       success: true,
       stats: {
         productCount,
-        totalRevenue: revenue[0]?.total || 0,
-        totalOrders: revenue[0]?.orders?.length || 0,
+        totalRevenue: totals.revenue,
+        totalOrders: totals.orders,
       },
     });
   } catch (err) { next(err); }

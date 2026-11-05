@@ -25,7 +25,8 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
       if (maxPrice) (filter.price as Record<string, number>).$lte = Number(maxPrice);
     }
     if (search) {
-      filter.$text = { $search: search };
+      const rx = new RegExp(String(search).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      filter.$or = [{ name: rx }, { description: rx }, { fabric: rx }, { tags: rx }, { subcategory: rx }];
     }
 
     const sortObj: Record<string, 1 | -1> = { [sort]: order === 'asc' ? 1 : -1 };

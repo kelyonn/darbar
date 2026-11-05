@@ -43,7 +43,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     try {
       const { data } = await api.get('/auth/me');
-      setUser(data.user);
+      setUser({ ...data.user, id: data.user.id ?? data.user._id });
     } catch {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');

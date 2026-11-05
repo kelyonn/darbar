@@ -4,6 +4,8 @@ import fs from 'fs';
 import Handlebars from 'handlebars';
 import { config } from '../config/env';
 
+export const smtpConfigured = Boolean(config.smtp.user && config.smtp.pass && !config.smtp.user.includes('your@'));
+
 const transporter = nodemailer.createTransport({
   host: config.smtp.host,
   port: config.smtp.port,
@@ -101,6 +103,14 @@ export const sendEmail = async (options: SendEmailOptions): Promise<void> => {
   let html = options.html;
   if (!html && options.template) {
     html = loadTemplate(options.template, options.variables || {});
+  }
+
+  if (!smtpConfigured) {
+    // No SMTP credentials: log the email instead of failing so local dev works end to end.
+    console.log(`[email:dev] To: ${options.to} | Subject: ${options.subject}`);
+    const links = (html || '').match(/href="([^"]+)"/g);
+    if (links) console.log(`[email:dev] Links: ${links.join(' ')}`);
+    return;
   }
 
   await transporter.sendMail({

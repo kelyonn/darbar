@@ -67,18 +67,31 @@ const Checkout = () => {
     setSubmitting(true);
 
     try {
-      const isLoaded = await loadRazorpay();
-      if (!isLoaded) {
-        toast('Razorpay SDK failed to load', 'error');
-        setSubmitting(false);
+      // Create Order
+      const { data } = await api.post('/orders', {
+        shippingAddress: { ...formData, line1: formData.address },
+        couponCode: couponCode || undefined
+      });
+
+      if (data.mock) {
+        // Development fallback: server has no Razorpay keys, so simulate a successful payment.
+        await api.post('/payments/verify', {
+          razorpayOrderId: data.razorpayOrderId,
+          razorpayPaymentId: 'mock_pay_' + Date.now().toString(36),
+          razorpaySignature: 'mock',
+          orderId: data.order._id
+        });
+        clearCart();
+        toast('Payment successful (test mode)', 'success');
+        navigate('/order-success');
         return;
       }
 
-      // Create Order
-      const { data } = await api.post('/orders', {
-        shippingAddress: formData,
-        couponCode: couponCode || undefined
-      });
+      const isLoaded = await loadRazorpay();
+      if (!isLoaded) {
+        toast('Razorpay SDK failed to load', 'error');
+        return;
+      }
 
       const options = {
         key: data.keyId,

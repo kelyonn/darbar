@@ -22,7 +22,7 @@ const Cart = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-4">
             {items.map(item => (
-              <div key={item.id} className="flex items-center gap-4 border rounded-lg p-4 bg-white">
+              <div key={item.lineId ?? item.id} className="flex items-center gap-4 border rounded-lg p-4 bg-white">
                 <img 
                   src={typeof item.images[0] === 'string' ? item.images[0] : (item.images[0] as any)?.url || ''} 
                   alt={item.name} 
@@ -31,16 +31,19 @@ const Cart = () => {
                 <div className="flex-grow">
                   <h3 className="font-playfair text-lg">{item.name}</h3>
                   <p className="text-gray-600">₹{item.price.toLocaleString()}</p>
+                  {(item.size || item.color) && (
+                    <p className="text-xs text-gray-500">{[item.color, item.size].filter(Boolean).join(' · ')}</p>
+                  )}
                   <div className="flex items-center gap-2 mt-2">
                     <button
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      onClick={() => updateQuantity(item.lineId ?? item.id, item.quantity - 1)}
                       className="px-2 py-1 border rounded hover:bg-gray-100"
                     >
                       -
                     </button>
                     <span className="w-8 text-center">{item.quantity}</span>
                     <button
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      onClick={() => updateQuantity(item.lineId ?? item.id, item.quantity + 1)}
                       className="px-2 py-1 border rounded hover:bg-gray-100"
                     >
                       +
@@ -48,7 +51,7 @@ const Cart = () => {
                   </div>
                 </div>
                 <button
-                  onClick={() => removeFromCart(item.id)}
+                  onClick={() => removeFromCart(item.lineId ?? item.id)}
                   className="text-royal-red hover:text-opacity-80"
                 >
                   Remove

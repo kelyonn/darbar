@@ -5,27 +5,24 @@ import { AuthRequest } from '../middleware/auth';
 import { Product } from '../models/Product';
 import { Order } from '../models/Order';
 
+import { sellerTotals } from '../utils/stats';
 const router = Router();
 router.use(authenticate, requireRole('seller', 'admin'));
 
 // GET /api/seller/dashboard
 router.get('/dashboard', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const [products, orderStats] = await Promise.all([
+    const [products, totals] = await Promise.all([
       Product.countDocuments({ sellerId: req.user!.id, isActive: true }),
-      Order.aggregate([
-        { $unwind: '$items' },
-        { $match: { 'items.sellerId': new (await import('mongoose')).default.Types.ObjectId(req.user!.id), paymentStatus: 'paid' } as Record<string, unknown> },
-        { $group: { _id: null, revenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } }, orders: { $addToSet: '$_id' } } },
-      ]),
+      sellerTotals(req.user!.id),
     ]);
 
     res.json({
       success: true,
       stats: {
         activeProducts: products,
-        totalRevenue: orderStats[0]?.revenue || 0,
-        totalOrders: orderStats[0]?.orders?.length || 0,
+        totalRevenue: totals.revenue,
+        totalOrders: totals.orders,
       },
     });
   } catch (err) { next(err); }

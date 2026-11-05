@@ -9,6 +9,14 @@ import { Order } from '../models/Order';
 import { AuthRequest } from '../middleware/auth';
 import { createError } from '../middleware/errorHandler';
 
+// Average computed in app code so it works on any Mongo-compatible server.
+const ratingStats = async (productId: string) => {
+  const rows = await Review.find({ productId }).select('rating').lean();
+  const count = rows.length;
+  const average = count ? Math.round((rows.reduce((s, r) => s + r.rating, 0) / count) * 10) / 10 : 0;
+  return { average, count };
+};
+
 const router = Router();
 
 // GET /api/reviews/product/:productId
@@ -26,15 +34,12 @@ router.get('/product/:productId', async (req: Request, res: Response, next: Next
       Review.countDocuments({ productId: req.params.productId }),
     ]);
 
-    const aggregate = await Review.aggregate([
-      { $match: { productId: new (await import('mongoose')).default.Types.ObjectId(req.params.productId) } },
-      { $group: { _id: null, average: { $avg: '$rating' }, count: { $sum: 1 } } },
-    ]);
+    const stats = await ratingStats(req.params.productId);
 
     res.json({
       success: true, reviews, total,
-      average: aggregate[0]?.average || 0,
-      count: aggregate[0]?.count || 0,
+      average: stats.average,
+      count: stats.count,
     });
   } catch (err) { next(err); }
 });
@@ -73,11 +78,8 @@ router.post('/',
       });
 
       // Update product rating aggregate
-      const agg = await Review.aggregate([
-        { $match: { productId: new (await import('mongoose')).default.Types.ObjectId(productId) } },
-        { $group: { _id: null, average: { $avg: '$rating' }, count: { $sum: 1 } } },
-      ]);
-      await Product.findByIdAndUpdate(productId, { 'ratings.average': agg[0]?.average || 0, 'ratings.count': agg[0]?.count || 0 });
+      const agg = await ratingStats(productId);
+      await Product.findByIdAndUpdate(productId, { 'ratings.average': agg.average, 'ratings.count': agg.count });
 
       res.status(201).json({ success: true, review });
     } catch (err) { next(err); }

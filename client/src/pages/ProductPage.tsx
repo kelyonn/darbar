@@ -204,7 +204,7 @@ const ProductPage = () => {
     setReviewMeta({ average: res.data.average || 0, count: res.data.count || 0 });
     if (user) {
       const alreadyReviewed = (res.data.reviews || []).some(
-        (r: any) => r.userId?._id === user._id || r.userId === user._id
+        (r: any) => r.userId?._id === user.id || r.userId === user.id
       );
       setHasReviewed(alreadyReviewed);
     }
@@ -277,7 +277,7 @@ const ProductPage = () => {
   }
 
   const handleAddToCart = () => {
-    addToCart({ ...product, id: product._id || product.id });
+    addToCart({ ...product, id: product._id || product.id }, { size: selectedSize || undefined, color: selectedColor || undefined });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };

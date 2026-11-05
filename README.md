@@ -11,25 +11,31 @@ A full-stack, production-ready MERN e-commerce platform tailored for luxury fash
 
 ## 1. Environment Configuration
 
-The project uses a single `.env` file at the root of the repository. You currently have placeholder keys for third-party services that you need to fill out before those specific features will fully work.
+Copy the example file and (optionally) fill in third-party keys:
 
-Open the `.env` file at the root of the project and update the following placeholders:
-
-```env
-# Razorpay (Required for Checkout to work)
-RAZORPAY_KEY_ID=your_real_key_here
-RAZORPAY_KEY_SECRET=your_real_secret_here
-RAZORPAY_WEBHOOK_SECRET=your_real_webhook_secret_here
-
-# Cloudinary (Required for Sellers to upload product images)
-CLOUDINARY_CLOUD_NAME=your_real_cloud_name
-CLOUDINARY_API_KEY=your_real_api_key
-CLOUDINARY_API_SECRET=your_real_api_secret
-
-# Vite Client Variables
-VITE_RAZORPAY_KEY_ID=your_real_key_here
+```bash
+cp .env.example .env
 ```
-*(Your MongoDB, JWT, and SMTP email settings are already configured and working!)*
+
+The defaults work for local development with **no external accounts**:
+
+| Service | Not configured (development) | Configured |
+|---|---|---|
+| MongoDB | needs a MongoDB reachable at `MONGODB_URI` (local `mongod` or Atlas) | - |
+| SMTP email | emails are printed to the server console; new accounts are auto-verified | real verification / reset / order emails |
+| Razorpay | checkout runs a simulated "test mode" payment | real Razorpay checkout (also set `VITE_RAZORPAY_KEY_ID`) |
+| Cloudinary | image uploads return a placeholder | real image uploads |
+
+In production (`NODE_ENV=production`) the fallbacks are disabled: email verification and real Razorpay keys are required.
+
+## Seed data
+
+```bash
+npm run seed
+```
+
+Creates 18 products, a sample coupon (`ROYAL10`) and two accounts:
+`admin@darbar.in / Admin@123456` and `seller@darbar.in / Seller@123456`.
 
 ## 2. Installation
 
@@ -66,6 +72,8 @@ To run all tests (both client and server):
 ```bash
 npm run test
 ```
+
+Server tests use an in-memory MongoDB. If it can't be downloaded in your environment, point them at any running MongoDB instead: `TEST_MONGODB_URI=mongodb://127.0.0.1:27017/darbar-test npm run test:server`.
 
 ## 5. Production Build
 
