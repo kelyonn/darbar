@@ -42,6 +42,9 @@ io.on('connection', socket => {
   socket.on('disconnect', () => {});
 });
 
+// Behind a reverse proxy (Render etc.) use the real client IP for rate limiting
+app.set('trust proxy', 1);
+
 // Security
 app.use(helmet());
 app.use(cors({
@@ -52,7 +55,7 @@ app.use(cors({
 // Global rate limiter
 app.use(rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200,
+  max: config.nodeEnv === 'production' ? 300 : 5000,
   message: { message: 'Too many requests, please try again later' },
 }));
 

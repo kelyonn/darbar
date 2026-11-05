@@ -6,7 +6,7 @@ echo "Starting Darbar..."
 if [ ! -f .env ]; then
   echo "Creating .env from .env.example..."
   cp .env.example .env
-  echo "Note: You may need to fill in MONGODB_URI and JWT_ACCESS_SECRET in .env"
+  echo "Note: .env points at mongodb://127.0.0.1:27017/darbar - make sure MongoDB is running (or edit MONGODB_URI)."
 fi
 
 # Check if node_modules exists in root, if not run install:all

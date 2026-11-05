@@ -19,6 +19,8 @@ if (config.razorpay.keyId && config.razorpay.keySecret) {
   });
 }
 
+export const devMockPayments = !razorpay && config.nodeEnv !== 'production';
+
 const generateOrderNumber = (): string => {
   return 'DBR-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
 };
@@ -80,10 +82,9 @@ export const createOrder = async (req: AuthRequest, res: Response, next: NextFun
         code: couponCode.toUpperCase(),
         isActive: true,
         $or: [{ expiresAt: { $exists: false } }, { expiresAt: { $gt: new Date() } }],
-        $where: function (this: { usedCount: number; maxUses: number }) { return this.usedCount < this.maxUses; },
       });
 
-      if (coupon && subtotal >= coupon.minPurchase) {
+      if (coupon && coupon.usedCount < coupon.maxUses && subtotal >= coupon.minPurchase) {
         if (coupon.type === 'percentage') discount = Math.min((subtotal * coupon.value) / 100, coupon.maxDiscount || Infinity);
         else if (coupon.type === 'fixed') discount = Math.min(coupon.value, subtotal);
         await Coupon.findByIdAndUpdate(coupon._id, { $inc: { usedCount: 1 } });
@@ -93,16 +94,19 @@ export const createOrder = async (req: AuthRequest, res: Response, next: NextFun
     const total = Math.max(0, subtotal - discount);
 
     // Create Razorpay order
-    if (!razorpay) {
+    if (!razorpay && !devMockPayments) {
       res.status(500).json({ message: 'Payment gateway not configured. Please add Razorpay keys.' });
       return;
     }
 
-    const razorpayOrder = await razorpay.orders.create({
-      amount: Math.round(total * 100), // paise
-      currency: 'INR',
-      receipt: generateOrderNumber(),
-    });
+    // Without Razorpay keys (non-production only) fall back to a simulated payment gateway.
+    const razorpayOrder = razorpay
+      ? await razorpay.orders.create({
+          amount: Math.round(total * 100), // paise
+          currency: 'INR',
+          receipt: generateOrderNumber(),
+        })
+      : { id: 'mock_order_' + Date.now().toString(36), receipt: generateOrderNumber(), amount: Math.round(total * 100), currency: 'INR' };
 
     // Create order in DB (pending payment)
     const order = await Order.create({
@@ -138,6 +142,7 @@ export const createOrder = async (req: AuthRequest, res: Response, next: NextFun
       amount: razorpayOrder.amount,
       currency: razorpayOrder.currency,
       keyId: config.razorpay.keyId,
+      mock: !razorpay,
     });
   } catch (err) { next(err); }
 };
@@ -147,17 +152,19 @@ export const verifyPayment = async (req: AuthRequest, res: Response, next: NextF
   try {
     const { razorpayOrderId, razorpayPaymentId, razorpaySignature, orderId } = req.body;
 
-    const expectedSignature = crypto
-      .createHmac('sha256', config.razorpay.keySecret)
-      .update(`${razorpayOrderId}|${razorpayPaymentId}`)
-      .digest('hex');
+    if (!(devMockPayments && String(razorpayOrderId).startsWith('mock_order_'))) {
+      const expectedSignature = crypto
+        .createHmac('sha256', config.razorpay.keySecret)
+        .update(`${razorpayOrderId}|${razorpayPaymentId}`)
+        .digest('hex');
 
-    if (expectedSignature !== razorpaySignature) {
-      res.status(400).json({ message: 'Payment verification failed' }); return;
+      if (expectedSignature !== razorpaySignature) {
+        res.status(400).json({ message: 'Payment verification failed' }); return;
+      }
     }
 
-    const order = await Order.findByIdAndUpdate(
-      orderId,
+    const order = await Order.findOneAndUpdate(
+      { _id: orderId, userId: req.user!.id, razorpayOrderId, paymentStatus: 'pending' },
       {
         paymentId: razorpayPaymentId,
         paymentStatus: 'paid',

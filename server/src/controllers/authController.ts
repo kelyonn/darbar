@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { validationResult } from 'express-validator';
 import { User } from '../models/User';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken, generateSecureToken } from '../utils/tokens';
-import { sendVerificationEmail, sendPasswordResetEmail } from '../services/email';
+import { sendVerificationEmail, sendPasswordResetEmail, smtpConfigured } from '../services/email';
 import { createError } from '../middleware/errorHandler';
 import { AuthRequest } from '../middleware/auth';
 import { config } from '../config/env';
@@ -32,6 +32,8 @@ export const register = async (req: Request, res: Response, next: NextFunction):
       passwordHash: password,
       verificationToken,
       verificationTokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24h
+      // Without SMTP in non-production there is no way to receive the link, so auto-verify.
+      isEmailVerified: !smtpConfigured && config.nodeEnv !== 'production',
     });
 
     // Send verification email — don't block registration if it fails
@@ -41,7 +43,9 @@ export const register = async (req: Request, res: Response, next: NextFunction):
 
     res.status(201).json({
       success: true,
-      message: 'Account created. Please check your email to verify your account.',
+      message: user.isEmailVerified
+        ? 'Account created. You can sign in now.'
+        : 'Account created. Please check your email to verify your account.',
     });
   } catch (err) {
     next(err);

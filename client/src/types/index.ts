@@ -13,4 +13,7 @@ export interface Product {
 
 export interface CartItem extends Product {
   quantity: number;
+  lineId?: string;
+  size?: string;
+  color?: string;
 }

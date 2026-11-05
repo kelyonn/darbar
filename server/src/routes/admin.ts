@@ -6,6 +6,7 @@ import { User } from '../models/User';
 import { Product } from '../models/Product';
 import { Order } from '../models/Order';
 import { Coupon } from '../models/Coupon';
+import { paidItems } from '../utils/stats';
 
 const router = Router();
 router.use(authenticate, requireRole('admin'));
@@ -121,40 +122,45 @@ router.get('/analytics', async (req: AuthRequest, res: Response, next: NextFunct
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
     const prevSince = new Date(Date.now() - 2 * days * 24 * 60 * 60 * 1000);
 
-    const [monthly, categories, topProducts, summary, prevSummary, totalUsers, totalProducts] = await Promise.all([
-      // Monthly revenue buckets
-      Order.aggregate([
-        { $match: { paymentStatus: 'paid', createdAt: { $gte: since } } },
-        { $group: { _id: { year: { $year: '$createdAt' }, month: { $month: '$createdAt' } }, revenue: { $sum: '$total' }, orders: { $sum: 1 } } },
-        { $sort: { '_id.year': 1, '_id.month': 1 } },
-      ]),
-      // Category breakdown
-      Order.aggregate([
-        { $match: { paymentStatus: 'paid', createdAt: { $gte: since } } },
-        { $unwind: '$items' },
-        { $group: { _id: '$items.category', count: { $sum: '$items.quantity' }, revenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } } } },
-        { $sort: { revenue: -1 } }, { $limit: 6 },
-      ]),
-      // Top products by units sold
-      Order.aggregate([
-        { $match: { paymentStatus: 'paid', createdAt: { $gte: since } } },
-        { $unwind: '$items' },
-        { $group: { _id: '$items.productId', name: { $first: '$items.name' }, sold: { $sum: '$items.quantity' }, revenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } } } },
-        { $sort: { sold: -1 } }, { $limit: 10 },
-      ]),
-      // Current period summary
-      Order.aggregate([
-        { $match: { paymentStatus: 'paid', createdAt: { $gte: since } } },
-        { $group: { _id: null, total: { $sum: '$total' }, count: { $sum: 1 } } },
-      ]),
-      // Previous period for % change
-      Order.aggregate([
-        { $match: { paymentStatus: 'paid', createdAt: { $gte: prevSince, $lt: since } } },
-        { $group: { _id: null, total: { $sum: '$total' }, count: { $sum: 1 } } },
-      ]),
+    const [items, totalUsers, totalProducts] = await Promise.all([
+      paidItems({ createdAt: { $gte: prevSince } }),
       User.countDocuments(),
       Product.countDocuments({ isActive: true }),
     ]);
+
+    const orders = await Order.find({ paymentStatus: 'paid', createdAt: { $gte: prevSince } }).select('total createdAt').lean();
+    const cur = orders.filter(o => o.createdAt >= since);
+    const prv = orders.filter(o => o.createdAt < since);
+    const summary = [{ total: cur.reduce((s, o) => s + o.total, 0), count: cur.length }];
+    const prevSummary = [{ total: prv.reduce((s, o) => s + o.total, 0), count: prv.length }];
+
+    // Monthly revenue buckets
+    const buckets = new Map<string, { year: number; month: number; revenue: number; orders: number }>();
+    for (const o of cur) {
+      const d = new Date(o.createdAt);
+      const key = `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}`;
+      const b = buckets.get(key) || { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, revenue: 0, orders: 0 };
+      b.revenue += o.total; b.orders += 1; buckets.set(key, b);
+    }
+    const monthly = [...buckets.values()]
+      .sort((a, b) => a.year - b.year || a.month - b.month)
+      .map(b => ({ _id: { year: b.year, month: b.month }, revenue: b.revenue, orders: b.orders }));
+
+    const curItems = items.filter(i => i.createdAt >= since);
+    const prodDocs = await Product.find({ _id: { $in: [...new Set(curItems.map(i => String(i.productId)))] } }).select('category').lean();
+    const categoryOf = new Map(prodDocs.map(p => [String(p._id), p.category as string]));
+    for (const i of curItems) i.category = categoryOf.get(String(i.productId)) || 'other';
+    const catMap = new Map<string, { _id: string; count: number; revenue: number }>();
+    const prodMap = new Map<string, { _id: unknown; name: string; sold: number; revenue: number }>();
+    for (const i of curItems) {
+      const c = catMap.get(i.category || 'other') || { _id: i.category || 'other', count: 0, revenue: 0 };
+      c.count += i.quantity; c.revenue += i.price * i.quantity; catMap.set(c._id, c);
+      const k = String(i.productId);
+      const p = prodMap.get(k) || { _id: i.productId, name: i.name, sold: 0, revenue: 0 };
+      p.sold += i.quantity; p.revenue += i.price * i.quantity; prodMap.set(k, p);
+    }
+    const categories = [...catMap.values()].sort((a, b) => b.revenue - a.revenue).slice(0, 6);
+    const topProducts = [...prodMap.values()].sort((a, b) => b.sold - a.sold).slice(0, 10);
 
     const curr = summary[0] || { total: 0, count: 0 };
     const prev = prevSummary[0] || { total: 0, count: 0 };

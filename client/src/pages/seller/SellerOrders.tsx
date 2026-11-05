@@ -133,7 +133,7 @@ const SellerOrders: React.FC = () => {
                     <p className="font-montserrat text-xs uppercase tracking-wider text-gray-500 mb-2">Ship to</p>
                     <p className="font-montserrat text-sm text-gray-700">
                       {order.shippingAddress.firstName} {order.shippingAddress.lastName}<br />
-                      {order.shippingAddress.address}, {order.shippingAddress.city}<br />
+                      {order.shippingAddress.line1}, {order.shippingAddress.city}<br />
                       {order.shippingAddress.state} — {order.shippingAddress.pincode}<br />
                       {order.shippingAddress.phone}
                     </p>
