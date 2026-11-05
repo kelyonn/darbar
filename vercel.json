@@ -14,5 +14,5 @@
       "destination": "/index.html"
     }
   ],
-  "installCommand": "npm install && npm install --prefix client && npm install --prefix server"
+  "installCommand": "MONGOMS_DISABLE_POSTINSTALL=1 npm install && MONGOMS_DISABLE_POSTINSTALL=1 npm install --prefix client && MONGOMS_DISABLE_POSTINSTALL=1 npm install --prefix server"
 }
