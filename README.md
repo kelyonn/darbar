@@ -77,7 +77,7 @@ Server tests use an in-memory MongoDB. If it can't be downloaded in your environ
 
 ## 5. Deploying to Vercel
 
-The repo deploys as a single Vercel project: the Vite app is served statically and the Express API runs as one serverless function (`api/index.ts`, configured in `vercel.json`). Vercel auto-deploys every push (branches get Preview URLs; the production branch gets the production URL).
+The repo deploys as a single Vercel project whose **Root Directory is `client`**: the Vite app is served statically and the Express API runs as one serverless function. `client/vercel.json` runs `npm run build:vercel`, which bundles `server/src` and its dependencies into `client/api/_bundle.js` (Vercel only packages files inside the root directory) and then builds the site. Vercel auto-deploys every push (branches get Preview URLs; the production branch gets the production URL).
 
 1. Create a free MongoDB Atlas cluster, create a database user, and under Network Access allow `0.0.0.0/0` (Vercel has no fixed IPs). Copy the `mongodb+srv://...` connection string.
 2. In Vercel, open the project, then **Settings > Environment Variables**, and add:
