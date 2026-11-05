@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 
 const KEY = 'darbar_recently_viewed';
 const MAX = 8;

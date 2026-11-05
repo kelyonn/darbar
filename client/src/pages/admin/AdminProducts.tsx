@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import AdminLayout from '../../layouts/AdminLayout';
 import api from '../../services/api';
 import { getFirstImage } from '../../utils/images';
-import { Plus, Edit2, Trash2, X } from 'lucide-react';
 
 interface Product {
   _id: string;

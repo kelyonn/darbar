@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import AdminLayout from '../../layouts/AdminLayout';
 import api from '../../services/api';
-import { Search, UserCheck, UserX, Shield } from 'lucide-react';
+import { Search, UserCheck, UserX } from 'lucide-react';
 
 interface User {
   _id: string;

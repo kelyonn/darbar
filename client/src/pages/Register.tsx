@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Eye, EyeOff, Check } from 'lucide-react';
 
@@ -11,7 +11,6 @@ const passwordRules = [
 ];
 
 const Register: React.FC = () => {
-  const navigate = useNavigate();
   const { register } = useAuth();
 
   const [formData, setFormData] = useState({

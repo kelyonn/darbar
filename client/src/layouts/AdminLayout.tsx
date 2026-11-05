@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard, Users, Package, ShoppingBag,
-  Tag, LogOut, Menu, X, ChevronRight, Store, TrendingUp,
+  Tag, LogOut, Menu, ChevronRight, Store, TrendingUp,
 } from 'lucide-react';
 
 interface AdminLayoutProps {

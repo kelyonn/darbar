@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { Heart, ChevronRight, Star, Share2, Copy, MessageCircle, CheckCircle, Clock } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -177,7 +177,6 @@ const ShareMenu: React.FC<{ name: string }> = ({ name }) => {
 /* ─── Main Component ─────────────────────────────────────────────────── */
 const ProductPage = () => {
   const { id: slug } = useParams();
-  const navigate = useNavigate();
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const { toast } = useToast();
