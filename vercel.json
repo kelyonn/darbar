@@ -14,7 +14,7 @@
       "destination": "/index.html"
     }
   ],
-  "installCommand": "npm install",
-  "buildCommand": "cd client && npm install && npm run build",
-  "outputDirectory": "client/dist"
+  "installCommand": "test -d client/src && npm install",
+  "buildCommand": "echo skip",
+  "outputDirectory": "."
 }
