@@ -1,117 +1,118 @@
-# Darbar — Luxury Fashion Marketplace
+<p align="center">
+  <img src="docs/readme/banner.svg" width="100%" alt="Darbar: gold arches drawn in sequence over the words Customer, Seller, Admin.">
+</p>
 
-A full-stack, production-ready MERN e-commerce platform tailored for luxury fashion.
+<p align="center">
+  <b>A marketplace for luxury fashion, with a court of sellers, a real checkout, and an admin who approves who gets in.</b><br>
+  <sub>A full-stack MERN commerce platform with three roles, Razorpay payments, seller onboarding, and a one-project Vercel deployment.</sub>
+</p>
 
-## Prerequisites
+<p align="center">
+  <sub>
+    <a href="#overview">OVERVIEW</a> &nbsp;·&nbsp;
+    <a href="#quick-start">QUICK START</a> &nbsp;·&nbsp;
+    <a href="#three-roles">THREE ROLES</a> &nbsp;·&nbsp;
+    <a href="#runs-without-accounts">RUNS WITHOUT ACCOUNTS</a> &nbsp;·&nbsp;
+    <a href="#run-it">RUN IT</a> &nbsp;·&nbsp;
+    <a href="#deploy-it">DEPLOY IT</a> &nbsp;·&nbsp;
+    <a href="#tests">TESTS</a>
+  </sub>
+</p>
 
-- Node.js (v18 or higher recommended)
-- MongoDB account (or local MongoDB server)
-- Razorpay account (for payments)
-- Cloudinary account (for seller image uploads)
+<br>
 
-## 1. Environment Configuration
+<table>
+  <tr>
+    <td><sub>STACK</sub><br><b>MongoDB · Express · React · Node</b></td>
+    <td><sub>LANGUAGE</sub><br><b>TypeScript</b></td>
+    <td><sub>PAYMENTS</sub><br><b>Razorpay</b></td>
+    <td><sub>IMAGES</sub><br><b>Cloudinary</b></td>
+    <td><sub>HOSTING</sub><br><b>Vercel, one project</b></td>
+  </tr>
+</table>
 
-Copy the example file and (optionally) fill in third-party keys:
+## Overview
+
+Darbar is a full-stack marketplace for luxury fashion with three roles: customers who browse and buy, sellers who apply and run their own storefronts, and admins who decide who gets in.
+
+> [!NOTE]
+> Every outside service has a development stand-in (emails print to the console, payments are simulated, uploads return a placeholder), so a fresh clone runs end to end with only MongoDB. In production the stand-ins switch off.
+
+## Quick start
 
 ```bash
 cp .env.example .env
+npm run install:all && npm run seed
+./run.sh                 # client :5173, API :5001
 ```
 
-The defaults work for local development with **no external accounts**:
+## Architecture
 
-| Service | Not configured (development) | Configured |
+```mermaid
+flowchart LR
+    cust["customer"] --> web["React client<br/>Vite"]
+    sell["seller portal"] --> web
+    adm["admin dashboard"] --> web
+    web --> api["Express API<br/>one serverless function on Vercel"]
+    api --> db[("MongoDB")]
+    api --> pay["Razorpay"]
+    api --> img["Cloudinary"]
+    api --> mail["SMTP"]
+    cron(["daily cron"]) --> api
+```
+
+
+## Three roles
+
+<table>
+  <tr>
+    <td width="33%" valign="top"><b>Customer</b><br><sub>Browse collections, keep a wishlist and a cart, check out, review what you bought, and apply to become a seller.</sub></td>
+    <td width="33%" valign="top"><b>Seller</b><br><sub>A seller portal to list products with images, manage inventory, and fulfil orders.</sub></td>
+    <td width="33%" valign="top"><b>Admin</b><br><sub>Approve seller applications, manage users and products, and read platform analytics.</sub></td>
+  </tr>
+</table>
+
+Around that: email verification and password resets, coupons, recently viewed items, a daily abandoned-cart job, and a live "someone just bought this" feed.
+
+## Runs without accounts
+
+Every third-party service has a development fallback, so a fresh clone works end to end with nothing but MongoDB.
+
+| Service | Not configured, in development | Configured |
 |---|---|---|
-| MongoDB | needs a MongoDB reachable at `MONGODB_URI` (local `mongod` or Atlas) | - |
-| SMTP email | emails are printed to the server console; new accounts are auto-verified | real verification / reset / order emails |
-| Razorpay | checkout runs a simulated "test mode" payment | real Razorpay checkout (also set `VITE_RAZORPAY_KEY_ID`) |
-| Cloudinary | image uploads return a placeholder | real image uploads |
+| SMTP | emails print to the server console; new accounts are verified automatically | real verification, reset and order emails |
+| Razorpay | a simulated test-mode payment | real checkout |
+| Cloudinary | uploads return a placeholder image | real uploads |
 
-In production (`NODE_ENV=production`) the fallbacks are disabled: email verification and real Razorpay keys are required.
+In production (`NODE_ENV=production`) the fallbacks switch off: email verification and real payment keys become mandatory.
 
-## Seed data
+## Run it
 
-```bash
-npm run seed
-```
-
-Creates 18 products, a sample coupon (`ROYAL10`) and two accounts:
-`admin@darbar.in / Admin@123456` and `seller@darbar.in / Seller@123456`.
-
-## 2. Installation
-
-Install dependencies for the root, client, and server all at once using the setup script:
+Node 18+ and a MongoDB (local `mongod` or Atlas).
 
 ```bash
-npm run install:all
-```
-
-## 3. Running the Application (Development)
-
-We have created two helper shell scripts in the root directory to make managing the servers easy.
-
-**To Start the Servers:**
-```bash
-./run.sh
-```
-This will start both the frontend Vite server (at `http://localhost:5173`) and the backend Express server (at `http://localhost:5001`) in the background. Server logs will be streamed to a `.dev.log` file in the root directory.
-
-**To Stop the Servers:**
-```bash
+cp .env.example .env
+npm run install:all      # root, client and server
+npm run seed             # 18 products, a sample coupon, an admin and a seller account
+./run.sh                 # client on :5173, API on :5001, logs in .dev.log
 ./stop.sh
 ```
 
-*(Alternatively, if you prefer seeing the logs directly in your terminal without the background script, you can run `npm run dev` from the root directory).*
+## Deploy it
 
-## 4. Testing
+One Vercel project with **Root Directory set to `client`**: the Vite app is served statically and the whole Express API runs as a single serverless function.
 
-We have configured a full testing suite:
-- **Backend**: Jest + Supertest (using MongoDB Memory Server for isolated database testing)
-- **Frontend**: Vitest + React Testing Library (using JS-DOM)
+1. Create a MongoDB Atlas cluster and allow `0.0.0.0/0`, since Vercel has no fixed IPs.
+2. In Vercel, set `MONGODB_URI`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` and `CRON_SECRET`. Add `ALLOW_MOCK_PAYMENTS=true` until real Razorpay keys are in.
+3. Seed Atlas once from your machine: `MONGODB_URI="mongodb+srv://..." SEED_ADMIN_PASSWORD="..." npm run seed`.
+4. Deploy, then open **`/api/diagnostics`**. It lists any missing variables and whether the database connects.
 
-To run all tests (both client and server):
+Vercel's Hobby plan has no WebSockets, so the live purchase feed is off there.
+
+## Tests
+
 ```bash
 npm run test
 ```
 
-Server tests use an in-memory MongoDB. If it can't be downloaded in your environment, point them at any running MongoDB instead: `TEST_MONGODB_URI=mongodb://127.0.0.1:27017/darbar-test npm run test:server`.
-
-## 5. Deploying to Vercel
-
-The repo deploys as a single Vercel project whose **Root Directory is `client`**: the Vite app is served statically and the Express API runs as one serverless function. `client/vercel.json` runs `npm run build:vercel`, which bundles `server/src` and its dependencies into `client/api/_bundle.js` (Vercel only packages files inside the root directory) and then builds the site. Vercel auto-deploys every push (branches get Preview URLs; the production branch gets the production URL).
-
-1. Create a free MongoDB Atlas cluster, create a database user, and under Network Access allow `0.0.0.0/0` (Vercel has no fixed IPs). Copy the `mongodb+srv://...` connection string.
-2. In Vercel, open the project, then **Settings > Environment Variables**, and add:
-
-| Variable | Value |
-|---|---|
-| `MONGODB_URI` | your Atlas connection string (include a database name, e.g. `.../darbar`) |
-| `JWT_ACCESS_SECRET` | any random string, 32+ characters |
-| `JWT_REFRESH_SECRET` | a different random string, 32+ characters |
-| `ALLOW_MOCK_PAYMENTS` | `true` for simulated checkout until Razorpay keys are set. Remove it once real keys are added |
-| `CRON_SECRET` | any random string (secures the daily abandoned-cart job) |
-
-   Optional: `CLIENT_URL` (custom domain), SMTP, Razorpay and Cloudinary keys as in `.env.example`.
-3. Load the products and accounts into Atlas once, from your computer:
-
-```bash
-MONGODB_URI="mongodb+srv://..." SEED_ADMIN_PASSWORD="choose-a-strong-password" npm run seed
-```
-
-4. Redeploy (or push a commit), then open `/api/diagnostics` on your site. It lists any missing variables and whether the database connects.
-5. Notes: with no SMTP configured, accounts are verified automatically.  Vercel Hobby has no WebSockets, so the live "someone just purchased" popup is inactive there.
-
-## 6. Production Build
-
-To build the application for production deployment:
-```bash
-npm run build:server
-npm run build:client
-```
-
-## Available Roles & Testing the UI
-You can test the system using different user roles:
-1. **Customer**: Can browse, add to cart/wishlist, checkout, leave reviews, and apply to become a seller.
-2. **Seller**: Can access the Seller Portal to add products, manage inventory, and view their orders.
-3. **Admin**: Can access the Admin Dashboard to approve seller applications, view platform analytics, and manage users/products.
-
-*(Tip: You can use the database to manually upgrade a test user's role to `admin` if you haven't seeded one already, and then use that admin account to approve seller applications).*
+The server suite runs on Jest and Supertest against an in-memory MongoDB, with a separate database per worker. The client suite runs on Vitest and React Testing Library. Where the in-memory server cannot be downloaded, point the tests at any running MongoDB with `TEST_MONGODB_URI`.
